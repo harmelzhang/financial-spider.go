@@ -1,3 +1,5 @@
+github.com/go-sql-driver/mysql v1.7.0 h1:ueSltNNllEqE3qcWBTD0iQd3IpL/6U+mJxLkazJ7YPc=
+github.com/go-sql-driver/mysql v1.7.0/go.mod h1:OXbVy3sEdcQ2Doequ6Z5BW6fXNQTmx+9S1MCJN5yJMI=
 github.com/metakeule/fmtdate v1.1.2 h1:n9M7H9HfAqp+6OA98wXGMdcAr6omshSNVct65Bks1lQ=
 github.com/metakeule/fmtdate v1.1.2/go.mod h1:2JyMFlKxeoGy1qS6obQukT0AL0Y4iNANQL8scbSdT4E=
 github.com/mozillazg/go-pinyin v0.19.0 h1:p+J8/kjJ558KPvVGYLvqBhxf8jbZA2exSLCs2uUVN8c=

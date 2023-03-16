@@ -19,7 +19,7 @@ func Get(url string) []byte {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		log.Fatalf("执行出错 : %s", err)
+		log.Fatalf("执行网络请求出错 : %s", err)
 	}
 	defer func() {
 		_ = resp.Body.Close()

@@ -1,5 +1,20 @@
 package config
 
+// ----- DataBase -----
+
+const DbHost = "127.0.0.1"  // 主机地址
+const DbPort = 3306         // 端口号
+const DbUsername = "root"   // 用户名
+const DbPassword = "123456" // 密码
+const DbName = "financial"  // 数据库名称
+
+// 连接池配置
+
+const DbMaxOpenConns = 100 // 最大打开连接数
+const DbMaxIdleConns = 20  // 最大空闲连接数
+const DbMaxIdleTime = 1    // 连接最大空闲时间（分钟）
+const DbMaxLifeTime = 2    // 连接的最大存活时间（分钟）
+
 // ----- HTTP -----
 
 const HttpAccept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
@@ -19,3 +34,8 @@ var UserAgent = []string{
 	"Mozilla/5.0 (Linux; Android 4.2.1; M040 Build/JOP40D) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.59 Mobile Safari/537.36",
 	"Mozilla/5.0 (Linux; U; Android 4.4.4; zh-cn; M351 Build/KTU84P) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30",
 }
+
+// ----- 数据爬取地址 -----
+
+// FetchIndexUrl 查询指数样本信息地址
+const FetchIndexUrl = "https://csi-web-dev.oss-cn-shanghai-finance-1-pub.aliyuncs.com/static/html/csindex/public/uploads/file/autofile/cons/%scons.xls"
