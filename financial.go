@@ -1,5 +1,10 @@
 package main
 
-func main() {
+import (
+	"financial-spider.go/cmd"
+	"os"
+)
 
+func main() {
+	cmd.Run(os.Args...)
 }
