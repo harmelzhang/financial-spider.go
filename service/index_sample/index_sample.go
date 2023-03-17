@@ -3,6 +3,8 @@ package index_sample
 import (
 	"financial-spider.go/config"
 	index "financial-spider.go/config/index_sample"
+	"financial-spider.go/models"
+	"financial-spider.go/utils/db"
 	"financial-spider.go/utils/http"
 	"financial-spider.go/utils/tools"
 	"financial-spider.go/utils/xls"
@@ -26,6 +28,20 @@ func Init() {
 		data := xls.ReadXls(http.Get(url), 0, 0)
 		stockCodes := tools.FetchColData(data, 4)
 		indexSample[indexType] = append(indexSample[indexType], stockCodes...)
+	}
+
+	// 入库
+	db.ExecSQL("DELETE FROM index_sample")
+	// 插入数据
+	for indexType, stockCodes := range indexSample {
+		for _, stockCode := range stockCodes {
+			is := models.IndexSample{
+				TypeCode:  string(indexType),
+				TypeName:  index.IndexTypeNameMap[indexType],
+				StockCode: stockCode,
+			}
+			is.IntoDb()
+		}
 	}
 }
 
