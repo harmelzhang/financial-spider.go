@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	isService "financial-spider.go/service/index_sample"
 	"fmt"
 )
 
@@ -20,6 +21,9 @@ var (
 		usage: "抓取网络数据",
 		handler: func() {
 			fmt.Println(">>>> 爬取数据")
+			isService.Init()
+			_, indexNames := isService.GetStockTypes("600031")
+			fmt.Println("NAMES: ", indexNames)
 		},
 	}
 	export = command{
