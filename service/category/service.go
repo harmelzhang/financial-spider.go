@@ -14,9 +14,6 @@ import (
 // 待爬取的地址
 var fetchUrls = map[cConfig.Type]string{}
 
-// 新的分类信息
-var categorys = make([]models.Category, 0)
-
 // 初始化爬取地址信息
 func init() {
 	for cType, _ := range cConfig.TypeNameMap {
@@ -30,6 +27,7 @@ func recursionCategorys(cType string, categoryVOs []vo.Category) {
 		return
 	}
 	for order, categoryVO := range categoryVOs {
+		// 插入新数据
 		category := models.Category{
 			Type:         cType,
 			Id:           categoryVO.Id,
@@ -38,7 +36,7 @@ func recursionCategorys(cType string, categoryVOs []vo.Category) {
 			DisplayOrder: order + 1,
 			ParentId:     categoryVO.ParentId,
 		}
-		categorys = append(categorys, category)
+		category.IntoDb()
 
 		if len(categoryVO.Children) != 0 {
 			recursionCategorys(cType, categoryVO.Children)
@@ -49,7 +47,8 @@ func recursionCategorys(cType string, categoryVOs []vo.Category) {
 // FetchCategory 爬取分类信息
 func FetchCategory() {
 	for categoryType, url := range fetchUrls {
-		log.Printf("爬取%s分类信息", cConfig.TypeNameMap[categoryType])
+		typeName := cConfig.TypeNameMap[categoryType]
+		log.Printf("爬取%s分类信息", typeName)
 
 		categoryRes := vo.CategoryResult{}
 		err := json.Unmarshal(http.Get(url), &categoryRes)
@@ -58,18 +57,11 @@ func FetchCategory() {
 		}
 
 		if categoryRes.Code == "200" && categoryRes.Success {
-			recursionCategorys(cConfig.TypeNameMap[categoryType], categoryRes.Data.MapList["4"])
+			// 删除旧数据
+			db.ExecSQL("DELETE FROM category WHERE type = ?", typeName)
+			recursionCategorys(typeName, categoryRes.Data.MapList["4"])
 		} else {
 			log.Fatalf("获取数据失败 > Code:%s, Msg: %s", categoryRes.Code, categoryRes.Message)
 		}
-	}
-
-	fmt.Println(">>>", categorys)
-
-	// 删除旧数据
-	db.ExecSQL("DELETE FROM category")
-	// 插入新数据
-	for _, category := range categorys {
-		category.IntoDb()
 	}
 }
