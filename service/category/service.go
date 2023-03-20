@@ -22,24 +22,24 @@ func init() {
 }
 
 // 递归获取所有分类信息
-func recursionCategorys(cType string, categoryVOs []vo.Category) {
+func recursionCategorys(typeName string, categoryVOs []vo.Category) {
 	if len(categoryVOs) == 0 {
 		return
 	}
 	for order, categoryVO := range categoryVOs {
-		// 插入新数据
 		category := models.Category{
-			Type:         cType,
+			Type:         typeName,
 			Id:           categoryVO.Id,
 			Name:         categoryVO.Name,
 			Level:        categoryVO.Level,
 			DisplayOrder: order + 1,
 			ParentId:     categoryVO.ParentId,
 		}
+		// 插入新数据
 		category.IntoDb()
 
 		if len(categoryVO.Children) != 0 {
-			recursionCategorys(cType, categoryVO.Children)
+			recursionCategorys(typeName, categoryVO.Children)
 		}
 	}
 }
@@ -63,5 +63,46 @@ func FetchCategory() {
 		} else {
 			log.Fatalf("获取数据失败 > Code:%s, Msg: %s", categoryRes.Code, categoryRes.Message)
 		}
+
+		log.Printf("爬取%s分类下的股票代码与分类之间的关系", typeName)
+		findStockCodesByCategoeyType(categoryType)
+	}
+}
+
+// 根据分类类型查询股票代码
+func findStockCodesByCategoeyType(cType cConfig.Type) {
+	url := fmt.Sprintf(cConfig.FetchStockCodeUrl, cType)
+
+	stockCodesRes := vo.StockCodeResult{}
+	err := json.Unmarshal(http.Get(url), &stockCodesRes)
+	if err != nil {
+		log.Fatalf("解析JSON出错 : %s", err)
+	}
+
+	if stockCodesRes.Code == "200" && stockCodesRes.Success {
+		typeName := cConfig.TypeNameMap[cType]
+
+		// 删除旧数据
+		db.ExecSQL("DELETE FROM category_stock_code WHERE type = ?", typeName)
+
+		for _, stockCodeVO := range stockCodesRes.Data.List {
+			csc := models.CategoryStockCode{
+				Type:      typeName,
+				StockCode: stockCodeVO.Code,
+			}
+			if stockCodeVO.CicsLeve1Code != "" { // 中证（四级）
+				csc.CategoryId = stockCodeVO.CicsLeve4Code
+			} else { // 证券会（两级）
+				// TODO 证券会暂时没对新三板股票进行分类，后续待优化
+				if stockCodeVO.CsrcLeve2Code == "" {
+					continue
+				}
+				csc.CategoryId = stockCodeVO.CsrcLeve2Code
+			}
+			// 插入新数据
+			csc.IntoDb()
+		}
+	} else {
+		log.Fatalf("获取数据失败 > Code:%s, Msg: %s", stockCodesRes.Code, stockCodesRes.Message)
 	}
 }

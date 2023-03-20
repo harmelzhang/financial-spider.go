@@ -24,6 +24,16 @@ CREATE TABLE `category` (
     CONSTRAINT `fk_parent_id` FOREIGN KEY (`parent_id`) REFERENCES `category` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='行业分类';
 
+DROP TABLE IF EXISTS `category_stock_code`;
+CREATE TABLE `category_stock_code` (
+    `type` VARCHAR(5) NOT NULL COMMENT '分类类型（证券会、中证）',
+    `category_id` VARCHAR(10) NOT NULL COMMENT '行业ID',
+    `stock_code` CHAR(6) NOT NULL COMMENT '股票代码',
+    PRIMARY KEY (`category_id`, `stock_code`),
+    CONSTRAINT `fk_category_id` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE,
+    KEY `i_stock_code` (`stock_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='股票行业分类';
+
 DROP TABLE IF EXISTS `stock`;
 CREATE TABLE `stock` (
     `code` CHAR(6) NOT NULL COMMENT '股票代码',
@@ -46,12 +56,3 @@ CREATE TABLE `stock` (
     KEY `i_stock_name` (`stock_name`),
     KEY `i_stock_name_pinyin` (`stock_name_pinyin`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='股票信息';
-
-DROP TABLE IF EXISTS `category_stock`;
-CREATE TABLE `category_stock` (
-    `category_id` VARCHAR(10) NOT NULL COMMENT '行业ID',
-    `stock_code` CHAR(6) NOT NULL COMMENT '股票代码',
-    PRIMARY KEY (`category_id`, `stock_code`),
-    CONSTRAINT `fk_category_id` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE,
-    KEY `i_stock_code` (`stock_code`)
-) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='股票行业分类';

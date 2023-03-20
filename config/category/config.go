@@ -4,7 +4,7 @@ package category
 const FetchCategoryUrl = "https://www.csindex.com.cn/csindex-home/dataServer/queryCsiPeIndustryBytradeDate?classType=%s"
 
 // FetchStockCodeUrl 查询行业下的股票信息接口
-const FetchStockCodeUrl = "https://www.csindex.com.cn/csindex-home/dataServer/queryCsiPeSecurity?classType=%s&CicsCode=%sID&level=%s&isAll=true"
+const FetchStockCodeUrl = "https://www.csindex.com.cn/csindex-home/dataServer/queryCsiPeSecurity?classType=%s&CicsCode=&level=&isAll=true"
 
 // Type 行业分类类型
 type Type string

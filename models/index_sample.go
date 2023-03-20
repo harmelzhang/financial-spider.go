@@ -9,7 +9,7 @@ type IndexSample struct {
 	StockCode string // 股票代码
 }
 
-// IntoDb 更新数据库
+// IntoDb 插入数据库
 func (indexSample *IndexSample) IntoDb() {
 	sql := "INSERT INTO index_sample(type_code, type_name, stock_code) VALUES(?, ?, ?)"
 	args := []interface{}{indexSample.TypeCode, indexSample.TypeName, indexSample.StockCode}
