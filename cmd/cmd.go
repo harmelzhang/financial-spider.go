@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	cService "financial-spider.go/service/category"
 	isService "financial-spider.go/service/index_sample"
 	"fmt"
 )
@@ -20,7 +21,8 @@ var (
 		name:  "fetch",
 		usage: "抓取网络数据",
 		handler: func() {
-			isService.Init()
+			isService.FetchIndexSample()
+			cService.FetchCategory()
 		},
 	}
 	export = command{
