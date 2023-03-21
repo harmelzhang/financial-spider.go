@@ -6,6 +6,15 @@ const FetchCategoryUrl = "https://www.csindex.com.cn/csindex-home/dataServer/que
 // FetchStockCodeUrl 查询行业下的股票信息接口
 const FetchStockCodeUrl = "https://www.csindex.com.cn/csindex-home/dataServer/queryCsiPeSecurity?classType=%s&CicsCode=&level=&isAll=true"
 
+// ShanghaiMarketPrefixs 上交所股票前缀
+var ShanghaiMarketPrefixs = []string{"60", "68"}
+
+// ShenzhenMarketPrefixs 深交所股票前缀
+var ShenzhenMarketPrefixs = []string{"00", "30"}
+
+// BeijingMarketPrefixs 北交所股票前缀
+var BeijingMarketPrefixs = []string{"82", "83", "87", "88", "43"}
+
 // Type 行业分类类型
 type Type string
 
