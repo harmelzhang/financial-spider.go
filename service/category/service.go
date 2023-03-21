@@ -69,6 +69,16 @@ func FetchCategory() {
 	}
 }
 
+// FindAllStockCodes 查询所有股票代码
+func FindAllStockCodes() []string {
+	data := db.ExecSQL("SELECT DISTINCT stock_code FROM category_stock_code ORDER BY stock_code")
+	result := make([]string, len(data))
+	for _, item := range data {
+		result = append(result, item["stock_code"].(string))
+	}
+	return result
+}
+
 // 根据分类类型查询股票代码
 func findStockCodesByCategoeyType(cType cConfig.Type) {
 	url := fmt.Sprintf(cConfig.FetchStockCodeUrl, cType)
