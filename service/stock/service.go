@@ -1,8 +1,13 @@
 package stock
 
 import (
+	"encoding/json"
 	cConfig "financial-spider.go/config/category"
+	sConfig "financial-spider.go/config/stock"
+	"financial-spider.go/models/vo"
+	"financial-spider.go/utils/http"
 	"financial-spider.go/utils/tools"
+	"fmt"
 	"log"
 )
 
@@ -10,6 +15,32 @@ import (
 func FetchStockBaseInfo(code string) {
 	log.Println("爬取股票基本信息")
 
+	_, marketShortName := QueryStockMarketPlace(code)
+
+	stockBaseInfoRes := vo.StockBaseInfoResult{}
+
+	url := fmt.Sprintf(sConfig.FetchStockBaseInfoUrl, marketShortName, code)
+	err := json.Unmarshal(http.Get(url), &stockBaseInfoRes)
+	if err != nil {
+		log.Fatalf("解析JSON出错 : %s", err)
+	}
+
+	baseInfo := stockBaseInfoRes.BaseInfo[0]
+	listingInfo := stockBaseInfoRes.ListingInfo[0]
+
+	stockMainBusinessResult := vo.StockMainBusinessResult{}
+	url = fmt.Sprintf(sConfig.FetchStockMainBusinessUrl, code)
+	err = json.Unmarshal(http.Get(url), &stockMainBusinessResult)
+	if err != nil {
+		log.Fatalf("解析JSON出错 : %s", err)
+	}
+
+	if stockMainBusinessResult.Code == 0 && stockMainBusinessResult.Success {
+		mainBusiness := stockMainBusinessResult.Result.Data[0].Info
+		fmt.Println(baseInfo, listingInfo, mainBusiness)
+	} else {
+		log.Fatalf("获取主营业务数据失败 > Code:%d, Msg: %s", stockMainBusinessResult.Code, stockMainBusinessResult.Message)
+	}
 }
 
 // FetchStockFinancialData 爬取股票对应公司财报数据
