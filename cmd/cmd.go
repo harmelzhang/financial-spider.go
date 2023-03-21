@@ -26,6 +26,7 @@ var (
 		name:  "fetch",
 		usage: "抓取网络数据",
 		handler: func() {
+			// TODO 暂时注释，后面调试完放开
 			//isService.FetchIndexSample()
 			//cService.FetchCategory()
 

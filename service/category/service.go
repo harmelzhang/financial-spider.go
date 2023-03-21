@@ -71,6 +71,7 @@ func FetchCategory() {
 
 // FindAllStockCodes 查询所有股票代码
 func FindAllStockCodes() ([]string, int) {
+	// 还可以在根据分类类型查询股票代码时存储一份，这里直接返回
 	data := db.ExecSQL("SELECT DISTINCT stock_code FROM category_stock_code ORDER BY stock_code")
 	result := make([]string, 0)
 	for _, item := range data {

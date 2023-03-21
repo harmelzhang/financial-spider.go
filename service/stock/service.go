@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	cConfig "financial-spider.go/config/category"
 	sConfig "financial-spider.go/config/stock"
+	"financial-spider.go/models"
 	"financial-spider.go/models/vo"
 	"financial-spider.go/utils/http"
 	"financial-spider.go/utils/tools"
@@ -15,7 +16,7 @@ import (
 func FetchStockBaseInfo(code string) {
 	log.Println("爬取股票基本信息")
 
-	_, marketShortName := QueryStockMarketPlace(code)
+	marketName, marketShortName := QueryStockMarketPlace(code)
 
 	stockBaseInfoRes := vo.StockBaseInfoResult{}
 
@@ -28,18 +29,36 @@ func FetchStockBaseInfo(code string) {
 	baseInfo := stockBaseInfoRes.BaseInfo[0]
 	listingInfo := stockBaseInfoRes.ListingInfo[0]
 
+	stock := models.Stock{
+		Code:                models.NewValue(code),
+		StockName:           models.NewValue(baseInfo.StockName),
+		StockNamePinyin:     models.NewValue(tools.GetPinyinFirstWord(baseInfo.StockName)),
+		StockBeforeName:     models.NewValue(baseInfo.StockBeforeName),
+		CompanyName:         models.NewValue(baseInfo.CompanyName),
+		CompanyProfile:      models.NewValue(baseInfo.CompanyProfile),
+		Region:              models.NewValue(baseInfo.Region),
+		Address:             models.NewValue(baseInfo.Address),
+		Website:             models.NewValue(baseInfo.Website),
+		BusinessScope:       models.NewValue(baseInfo.BusinessScope),
+		DateOfIncorporation: models.NewValue(listingInfo.DateOfIncorporation),
+		ListingDate:         models.NewValue(listingInfo.ListingDate),
+		LawFirm:             models.NewValue(baseInfo.LawFirm),
+		AccountingFirm:      models.NewValue(baseInfo.AccountingFirm),
+		MarketPlace:         models.NewValue(marketName),
+	}
+
 	stockMainBusinessResult := vo.StockMainBusinessResult{}
 	url = fmt.Sprintf(sConfig.FetchStockMainBusinessUrl, code)
 	err = json.Unmarshal(http.Get(url), &stockMainBusinessResult)
 	if err != nil {
-		log.Fatalf("解析JSON出错 : %s", err)
+		log.Printf("解析JSON出错，跳过主营业务 : %s", err)
 	}
 
 	if stockMainBusinessResult.Code == 0 && stockMainBusinessResult.Success {
 		mainBusiness := stockMainBusinessResult.Result.Data[0].Info
-		fmt.Println(baseInfo, listingInfo, mainBusiness)
+		stock.MainBusiness = models.NewValue(mainBusiness)
 	} else {
-		log.Fatalf("获取主营业务数据失败 > Code:%d, Msg: %s", stockMainBusinessResult.Code, stockMainBusinessResult.Message)
+		log.Printf("获取主营业务数据失败，跳过爬取 > Code:%d, Msg: %s", stockMainBusinessResult.Code, stockMainBusinessResult.Message)
 	}
 }
 
