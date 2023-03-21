@@ -6,13 +6,14 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"time"
 )
 
 // Get 请求网络资源，HTTP : GET
 func Get(url string) []byte {
 	log.Printf("HTTP REQUEST [GET] : %s", url)
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: config.HttpTimeout * time.Second}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Add("Accept", config.HttpAccept)
 	req.Header.Add("User-Agent", config.UserAgent[rand.Intn(len(config.UserAgent))])

@@ -15,7 +15,14 @@ const DbMaxIdleConns = 20  // 最大空闲连接数
 const DbMaxIdleTime = 1    // 连接最大空闲时间（分钟）
 const DbMaxLifeTime = 2    // 连接的最大存活时间（分钟）
 
+// ----- 爬取进度 -----
+
+const ProgressFileName = "progress.json" // 配置文件路径
+const TaskIntervalDay = 7                // 任务周期天数
+
 // ----- HTTP -----
+
+const HttpTimeout = 20 // 超时时长（秒）
 
 const HttpAccept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
 
