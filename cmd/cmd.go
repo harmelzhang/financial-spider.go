@@ -1,9 +1,14 @@
 package cmd
 
 import (
+	"financial-spider.go/config"
+	"financial-spider.go/models"
 	cService "financial-spider.go/service/category"
-	isService "financial-spider.go/service/index_sample"
+	sService "financial-spider.go/service/stock"
+	"financial-spider.go/utils/tools"
 	"fmt"
+	"log"
+	"time"
 )
 
 // 处理函数
@@ -21,8 +26,59 @@ var (
 		name:  "fetch",
 		usage: "抓取网络数据",
 		handler: func() {
-			isService.FetchIndexSample()
-			cService.FetchCategory()
+			//isService.FetchIndexSample()
+			//cService.FetchCategory()
+
+			stockCodes, total := cService.FindAllStockCodes()
+
+			progress := models.NewProgress()
+
+			// 初始化配置文件
+			if tools.FileIsExist(config.ProgressFileName) {
+				progress.Load(config.ProgressFileName)
+			} else {
+				progress.Write(config.ProgressFileName)
+			}
+
+			// 如果到了五月一日，全部重跑（年报全部出了）
+			if time.Now().Format("01-02") == "05-01" {
+				progress = models.NewProgress()
+			}
+
+			// 如果上次成功了，判断时间是否大于配置天数
+			if progress.Done {
+				if time.Now().Unix()-progress.Time >= config.TaskIntervalDay*24*3600 {
+					progress = models.NewProgress()
+				} else {
+					log.Printf("任务结束 : 离上次任务成功结束时间小于%d天", config.TaskIntervalDay)
+					return
+				}
+			}
+
+			log.Println("爬取股票基本信息和对应公司财报数据")
+			for i, code := range stockCodes {
+				log.Printf("任务进度 : %d / %d", i+1, total)
+
+				if tools.IndexOf(progress.Codes, code) != -1 {
+					log.Println("跳过已爬取的公司")
+					continue
+				}
+
+				// 爬取数据
+				sService.FetchStockBaseInfo(code)
+				sService.FetchStockFinancialData(code)
+
+				progress.Codes = append(progress.Codes, code)
+				progress.Time = time.Now().Unix()
+				progress.Write(config.ProgressFileName)
+			}
+
+			progress.Done = true
+			progress.Time = time.Now().Unix()
+			progress.Write(config.ProgressFileName)
+
+			log.Println("任务结束！")
+
 		},
 	}
 	export = command{
