@@ -33,12 +33,39 @@ func GetDb() *sql.DB {
 }
 
 // ExecSQL 执行SQL
-func ExecSQL(sql string, args ...any) {
-	rows, err := db.Query(sql, args...)
+func ExecSQL(sqlStr string, args ...any) []map[string]interface{} {
+	rows, err := db.Query(sqlStr, args...)
 	if err != nil {
 		log.Fatalf("SQL执行出错 : %s", err)
 	}
+
 	defer func() {
 		_ = rows.Close()
 	}()
+
+	data := make([]map[string]interface{}, 0)
+
+	cols, _ := rows.Columns()
+	colCount := len(cols)
+	values, valuePoints := make([]interface{}, colCount), make([]interface{}, colCount)
+
+	for rows.Next() {
+		for i := 0; i < colCount; i++ {
+			valuePoints[i] = &values[i]
+		}
+		_ = rows.Scan(valuePoints...)
+
+		temp := make(map[string]interface{})
+		for i, val := range values {
+			bytes, ok := val.([]byte)
+			if ok {
+				temp[cols[i]] = string(bytes)
+			} else {
+				temp[cols[i]] = val
+			}
+		}
+		data = append(data, temp)
+	}
+
+	return data
 }
