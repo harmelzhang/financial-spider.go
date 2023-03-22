@@ -1,7 +1,7 @@
 package index_sample
 
-// FetchIndexUrl 查询指数样本信息地址
-const FetchIndexUrl = "https://csi-web-dev.oss-cn-shanghai-finance-1-pub.aliyuncs.com/static/html/csindex/public/uploads/file/autofile/cons/%scons.xls"
+// QueryIndexUrl 查询指数样本信息地址
+const QueryIndexUrl = "https://csi-web-dev.oss-cn-shanghai-finance-1-pub.aliyuncs.com/static/html/csindex/public/uploads/file/autofile/cons/%scons.xls"
 
 // Type 指数类型
 type Type string

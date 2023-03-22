@@ -1,10 +1,10 @@
 package category
 
-// FetchCategoryUrl 查询行业分类接口（证券会：1、中证：2）
-const FetchCategoryUrl = "https://www.csindex.com.cn/csindex-home/dataServer/queryCsiPeIndustryBytradeDate?classType=%s"
+// QueryCategoryUrl 查询行业分类接口（证券会：1、中证：2）
+const QueryCategoryUrl = "https://www.csindex.com.cn/csindex-home/dataServer/queryCsiPeIndustryBytradeDate?classType=%s"
 
-// FetchStockCodeUrl 查询行业下的股票信息接口
-const FetchStockCodeUrl = "https://www.csindex.com.cn/csindex-home/dataServer/queryCsiPeSecurity?classType=%s&CicsCode=&level=&isAll=true"
+// QueryStockCodeUrl 查询行业下的股票信息接口
+const QueryStockCodeUrl = "https://www.csindex.com.cn/csindex-home/dataServer/queryCsiPeSecurity?classType=%s&CicsCode=&level=&isAll=true"
 
 // ShanghaiMarketPrefixs 上交所股票前缀
 var ShanghaiMarketPrefixs = []string{"60", "68"}

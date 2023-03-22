@@ -18,8 +18,8 @@ func IndexOf[T string](source []T, target T) int {
 	return -1
 }
 
-// FetchColData 获取指定二维数组索引列的数据
-func FetchColData(table [][]string, colIndex int) []string {
+// QueryColData 获取指定二维数组索引列的数据
+func QueryColData(table [][]string, colIndex int) []string {
 	data := make([]string, 0)
 	for _, row := range table {
 		for i := 0; i < len(row); i++ {

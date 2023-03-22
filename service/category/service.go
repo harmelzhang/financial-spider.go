@@ -11,13 +11,13 @@ import (
 	"log"
 )
 
-// 待爬取的地址
-var fetchUrls = map[cConfig.Type]string{}
+// 待查询的地址
+var queryUrls = map[cConfig.Type]string{}
 
-// 初始化爬取地址信息
+// 初始化查询地址信息
 func init() {
 	for cType, _ := range cConfig.TypeNameMap {
-		fetchUrls[cType] = fmt.Sprintf(cConfig.FetchCategoryUrl, cType)
+		queryUrls[cType] = fmt.Sprintf(cConfig.QueryCategoryUrl, cType)
 	}
 }
 
@@ -44,11 +44,11 @@ func recursionCategorys(typeName string, categoryVOs []vo.Category) {
 	}
 }
 
-// FetchCategory 爬取分类信息
-func FetchCategory() {
-	for categoryType, url := range fetchUrls {
+// QueryCategory 查询分类信息
+func QueryCategory() {
+	for categoryType, url := range queryUrls {
 		typeName := cConfig.TypeNameMap[categoryType]
-		log.Printf("爬取%s分类信息", typeName)
+		log.Printf("查询%s分类信息", typeName)
 
 		categoryRes := vo.CategoryResult{}
 		err := json.Unmarshal(http.Get(url), &categoryRes)
@@ -64,7 +64,7 @@ func FetchCategory() {
 			log.Fatalf("获取数据失败 > Code:%s, Msg: %s", categoryRes.Code, categoryRes.Message)
 		}
 
-		log.Printf("爬取%s分类下的股票代码与分类之间的关系", typeName)
+		log.Printf("查询%s分类下的股票代码与分类之间的关系", typeName)
 		findStockCodesByCategoeyType(categoryType)
 	}
 }
@@ -82,7 +82,7 @@ func FindAllStockCodes() ([]string, int) {
 
 // 根据分类类型查询股票代码
 func findStockCodesByCategoeyType(cType cConfig.Type) {
-	url := fmt.Sprintf(cConfig.FetchStockCodeUrl, cType)
+	url := fmt.Sprintf(cConfig.QueryStockCodeUrl, cType)
 
 	stockCodesRes := vo.StockCodeResult{}
 	err := json.Unmarshal(http.Get(url), &stockCodesRes)

@@ -11,24 +11,24 @@ import (
 	"log"
 )
 
-// 待爬取的地址
-var fetchUrls = map[isConfig.Type]string{}
+// 待查询的地址
+var queryUrls = map[isConfig.Type]string{}
 
 // 指数样本信息
 var indexSample = make(map[isConfig.Type][]string)
 
 func init() {
 	for indexType, _ := range isConfig.TypeNameMap {
-		fetchUrls[indexType] = fmt.Sprintf(isConfig.FetchIndexUrl, indexType)
+		queryUrls[indexType] = fmt.Sprintf(isConfig.QueryIndexUrl, indexType)
 	}
 }
 
-// FetchIndexSample 爬取指数样本信息
-func FetchIndexSample() {
-	for isType, url := range fetchUrls {
-		log.Printf("爬取%s样本信息", isConfig.TypeNameMap[isType])
+// QueryIndexSample 查询指数样本信息
+func QueryIndexSample() {
+	for isType, url := range queryUrls {
+		log.Printf("查询%s样本信息", isConfig.TypeNameMap[isType])
 		data := xls.ReadXls(http.Get(url), 0, 0)
-		stockCodes := tools.FetchColData(data, 4)
+		stockCodes := tools.QueryColData(data, 4)
 		indexSample[isType] = append(indexSample[isType], stockCodes...)
 	}
 

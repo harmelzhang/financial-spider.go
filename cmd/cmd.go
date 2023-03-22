@@ -27,8 +27,8 @@ var (
 		name:  "fetch",
 		usage: "抓取网络数据",
 		handler: func() {
-			isService.FetchIndexSample()
-			cService.FetchCategory()
+			isService.QueryIndexSample()
+			cService.QueryCategory()
 
 			stockCodes, total := cService.FindAllStockCodes()
 
@@ -56,18 +56,18 @@ var (
 				}
 			}
 
-			log.Println("爬取股票基本信息和对应公司财报数据")
+			log.Println("查询股票基本信息和对应公司财报数据")
 			for i, code := range stockCodes {
 				log.Printf("任务进度 : %d / %d", i+1, total)
 
 				if tools.IndexOf(progress.Codes, code) != -1 {
-					log.Println("跳过已爬取的公司")
+					log.Println("跳过已查询的公司")
 					continue
 				}
 
-				// 爬取数据
-				sService.FetchStockBaseInfo(code)
-				sService.FetchStockFinancialData(code)
+				// 查询数据
+				sService.QueryStockBaseInfo(code)
+				sService.QueryStockFinancialData(code)
 
 				progress.Codes = append(progress.Codes, code)
 				progress.Time = time.Now().Unix()
