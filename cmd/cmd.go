@@ -4,6 +4,7 @@ import (
 	"financial-spider.go/config"
 	"financial-spider.go/models"
 	cService "financial-spider.go/service/category"
+	isService "financial-spider.go/service/index_sample"
 	sService "financial-spider.go/service/stock"
 	"financial-spider.go/utils/tools"
 	"fmt"
@@ -26,9 +27,8 @@ var (
 		name:  "fetch",
 		usage: "抓取网络数据",
 		handler: func() {
-			// TODO 暂时注释，后面调试完放开
-			//isService.FetchIndexSample()
-			//cService.FetchCategory()
+			isService.FetchIndexSample()
+			cService.FetchCategory()
 
 			stockCodes, total := cService.FindAllStockCodes()
 

@@ -32,7 +32,7 @@ func Get(url string) []byte {
 
 	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("执行出错 : %s", err)
+		log.Fatalf("执行网络请求出错 : %s", err)
 	}
 	return bytes
 }

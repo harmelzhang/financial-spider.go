@@ -10,6 +10,7 @@ import (
 	"financial-spider.go/utils/tools"
 	"fmt"
 	"log"
+	"strings"
 )
 
 // FetchStockBaseInfo 爬取股票基本信息
@@ -30,21 +31,21 @@ func FetchStockBaseInfo(code string) {
 	listingInfo := stockBaseInfoRes.ListingInfo[0]
 
 	stock := models.Stock{
-		Code:                models.NewValue(code),
-		StockName:           models.NewValue(baseInfo.StockName),
-		StockNamePinyin:     models.NewValue(tools.GetPinyinFirstWord(baseInfo.StockName)),
-		StockBeforeName:     models.NewValue(baseInfo.StockBeforeName),
-		CompanyName:         models.NewValue(baseInfo.CompanyName),
-		CompanyProfile:      models.NewValue(baseInfo.CompanyProfile),
-		Region:              models.NewValue(baseInfo.Region),
-		Address:             models.NewValue(baseInfo.Address),
-		Website:             models.NewValue(baseInfo.Website),
-		BusinessScope:       models.NewValue(baseInfo.BusinessScope),
-		DateOfIncorporation: models.NewValue(listingInfo.DateOfIncorporation),
-		ListingDate:         models.NewValue(listingInfo.ListingDate),
-		LawFirm:             models.NewValue(baseInfo.LawFirm),
-		AccountingFirm:      models.NewValue(baseInfo.AccountingFirm),
-		MarketPlace:         models.NewValue(marketName),
+		Code:                code,
+		StockName:           baseInfo.StockName,
+		StockNamePinyin:     tools.GetPinyinFirstWord(baseInfo.StockName.(string)),
+		StockBeforeName:     baseInfo.StockBeforeName,
+		CompanyName:         baseInfo.CompanyName,
+		CompanyProfile:      strings.Trim(baseInfo.CompanyProfile.(string), " "),
+		Region:              baseInfo.Region,
+		Address:             baseInfo.Address,
+		Website:             baseInfo.Website,
+		BusinessScope:       baseInfo.BusinessScope,
+		DateOfIncorporation: listingInfo.DateOfIncorporation,
+		ListingDate:         listingInfo.ListingDate,
+		LawFirm:             baseInfo.LawFirm,
+		AccountingFirm:      baseInfo.AccountingFirm,
+		MarketPlace:         marketName,
 	}
 
 	stockMainBusinessResult := vo.StockMainBusinessResult{}
@@ -55,11 +56,13 @@ func FetchStockBaseInfo(code string) {
 	}
 
 	if stockMainBusinessResult.Code == 0 && stockMainBusinessResult.Success {
-		mainBusiness := stockMainBusinessResult.Result.Data[0].Info
-		stock.MainBusiness = models.NewValue(mainBusiness)
+		stock.MainBusiness = stockMainBusinessResult.Result.Data[0].Info
 	} else {
 		log.Printf("获取主营业务数据失败，跳过爬取 > Code:%d, Msg: %s", stockMainBusinessResult.Code, stockMainBusinessResult.Message)
 	}
+
+	// 插入或修改数据
+	stock.ReplaceData()
 }
 
 // FetchStockFinancialData 爬取股票对应公司财报数据

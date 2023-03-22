@@ -1,21 +1,21 @@
 package vo
 
 type StockBaseInfo struct {
-	StockName       string `json:"STR_NAMEA"`        // 股票名称
-	StockBeforeName string `json:"FORMERNAME"`       // 股票曾用名称
-	CompanyName     string `json:"ORG_NAME"`         // 公司名称
-	CompanyProfile  string `json:"ORG_PROFILE"`      // 公司简介
-	Region          string `json:"PROVINCE"`         // 地域
-	Address         string `json:"ADDRESS"`          // 办公地址
-	Website         string `json:"ORG_WEB"`          // 公司网站
-	BusinessScope   string `json:"BUSINESS_SCOPE"`   // 经营范围
-	AccountingFirm  string `json:"ACCOUNTFIRM_NAME"` // 会计师事务所
-	LawFirm         string `json:"LAW_FIRM"`         // 律师事务所
+	StockName       interface{} `json:"SECURITY_NAME_ABBR"` // 股票名称
+	StockBeforeName interface{} `json:"FORMERNAME"`         // 股票曾用名称
+	CompanyName     interface{} `json:"ORG_NAME"`           // 公司名称
+	CompanyProfile  interface{} `json:"ORG_PROFILE"`        // 公司简介
+	Region          interface{} `json:"PROVINCE"`           // 地域
+	Address         interface{} `json:"ADDRESS"`            // 办公地址
+	Website         interface{} `json:"ORG_WEB"`            // 公司网站
+	BusinessScope   interface{} `json:"BUSINESS_SCOPE"`     // 经营范围
+	AccountingFirm  interface{} `json:"ACCOUNTFIRM_NAME"`   // 会计师事务所
+	LawFirm         interface{} `json:"LAW_FIRM"`           // 律师事务所
 }
 
 type StockListingInfo struct {
-	DateOfIncorporation string `json:"FOUND_DATE"`   // 成立日期
-	ListingDate         string `json:"LISTING_DATE"` // 上市日期
+	DateOfIncorporation interface{} `json:"FOUND_DATE"`   // 成立日期
+	ListingDate         interface{} `json:"LISTING_DATE"` // 上市日期
 }
 
 type StockBaseInfoResult struct {
@@ -26,7 +26,7 @@ type StockBaseInfoResult struct {
 // -----
 
 type MBInfo struct {
-	Info string `json:"MAIN_BUSINESS"`
+	Info interface{} `json:"MAIN_BUSINESS"`
 }
 
 // StockMB 主营业务员
@@ -38,8 +38,8 @@ type StockMB struct {
 
 // StockMainBusinessResult 股票主营业务
 type StockMainBusinessResult struct {
-	Code    int     `json:"code"`
-	Success bool    `json:"success"`
-	Message string  `json:"message"`
-	Result  StockMB `json:"result"` // 主营业务
+	Code    int         `json:"code"`
+	Success bool        `json:"success"`
+	Message interface{} `json:"message"`
+	Result  StockMB     `json:"result"` // 主营业务
 }
