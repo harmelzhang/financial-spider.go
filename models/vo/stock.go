@@ -43,3 +43,16 @@ type StockMainBusinessResult struct {
 	Message interface{} `json:"message"`
 	Result  StockMB     `json:"result"` // 主营业务
 }
+
+// -----
+
+type StockReportDate struct {
+	Date string `json:"REPORT_DATE"`
+	Type string `json:"REPORT_TYPE"`
+}
+
+type StockReportDateResult struct {
+	Count int               `json:"count"`
+	Pages int               `json:"pages"`
+	Data  []StockReportDate `json:"data"` // 只有一个
+}

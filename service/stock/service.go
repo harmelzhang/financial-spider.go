@@ -63,6 +63,8 @@ func FetchStockBaseInfo(code string) {
 
 	// 插入或修改数据
 	stock.ReplaceData()
+
+	queryAllReportDate(code)
 }
 
 // FetchStockFinancialData 爬取股票对应公司财报数据
@@ -82,4 +84,48 @@ func QueryStockMarketPlace(code string) (string, string) {
 		name, shortName = "北京", "BJ"
 	}
 	return name, shortName
+}
+
+// 查询所有报告期
+func queryAllReportDate(code string) []string {
+	result := make([]string, 0)
+
+	_, marketShortName := QueryStockMarketPlace(code)
+
+	reportDateResult := vo.StockReportDateResult{}
+
+	insertDate := func() {
+		for _, reportDate := range reportDateResult.Data {
+			date := strings.Split(reportDate.Date, " ")[0]
+			if tools.IndexOf(result, date) == -1 {
+				result = append(result, date)
+			}
+		}
+	}
+
+	log.Println("查询资产负债表报告期")
+	url := fmt.Sprintf(sConfig.FetchBalanceSheetReportDateUrl, marketShortName, code)
+	err := json.Unmarshal(http.Get(url), &reportDateResult)
+	if err != nil {
+		log.Fatalf("解析JSON出错 : %s", err)
+	}
+	insertDate()
+
+	log.Println("查询利润表报告期")
+	url = fmt.Sprintf(sConfig.FetchIncomeSheetReportDateUrl, marketShortName, code)
+	err = json.Unmarshal(http.Get(url), &reportDateResult)
+	if err != nil {
+		log.Fatalf("解析JSON出错 : %s", err)
+	}
+	insertDate()
+
+	log.Println("查询现金流量表报告期")
+	url = fmt.Sprintf(sConfig.FetchCashFlowSheetReportDateUrl, marketShortName, code)
+	err = json.Unmarshal(http.Get(url), &reportDateResult)
+	if err != nil {
+		log.Fatalf("解析JSON出错 : %s", err)
+	}
+	insertDate()
+
+	return result
 }
