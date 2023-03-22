@@ -11,8 +11,6 @@ import (
 
 // Get 请求网络资源，HTTP : GET
 func Get(url string) []byte {
-	log.Printf("HTTP REQUEST [GET] : %s", url)
-
 	client := &http.Client{Timeout: config.HttpTimeout * time.Second}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Add("Accept", config.HttpAccept)
@@ -20,7 +18,7 @@ func Get(url string) []byte {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		log.Fatalf("执行网络请求出错 : %s", err)
+		log.Fatalf("执行网络请求出错 : %s > %s", url, err)
 	}
 	defer func() {
 		_ = resp.Body.Close()
