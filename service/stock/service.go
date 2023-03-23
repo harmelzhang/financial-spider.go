@@ -7,6 +7,7 @@ import (
 	sConfig "financial-spider.go/config/stock"
 	"financial-spider.go/models"
 	"financial-spider.go/models/vo"
+	"financial-spider.go/utils/db"
 	"financial-spider.go/utils/http"
 	"financial-spider.go/utils/tools"
 	"fmt"
@@ -188,8 +189,9 @@ func processingDividend(code string) {
 			financial := models.NewFinancial(code, reportDate)
 			financial.InitData()
 
-			financial.Dividend = dividend.Money
-			financial.UpdateData()
+			sql := "UPDATE financial SET dividend = ? WHERE code = ? AND report_date = ?"
+			args := []interface{}{dividend.Money, code, reportDate}
+			db.ExecSQL(sql, args...)
 		}
 	} else {
 		log.Printf("获取分红数据失败，跳过查询 > Code:%d, Msg: %s", dividendResult.Code, dividendResult.Message)
