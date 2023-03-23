@@ -56,3 +56,15 @@ CREATE TABLE `stock` (
     KEY `i_stock_name` (`stock_name`),
     KEY `i_stock_name_pinyin` (`stock_name_pinyin`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='股票信息';
+
+DROP TABLE IF EXISTS `financial`;
+CREATE TABLE `financial` (
+    `code` CHAR(6) NOT NULL COMMENT '股票代码',
+    `year` CHAR(4) NOT NULL COMMENT '年份',
+    `report_date` DATE NOT NULL COMMENT '财报季期',
+    `report_type` VARCHAR(2) NOT NULL COMMENT '季期类型（Q1~Q4，分别代表：一季报、半年报、三季报、年报；O，代表：其他）',
+    `ocf` DOUBLE DEFAULT NULL COMMENT '营业活动现金流量',
+    `cfi` DOUBLE DEFAULT NULL COMMENT '投资活动现金流量',
+    `cff` DOUBLE DEFAULT NULL COMMENT '筹资活动现金流量',
+    PRIMARY KEY (`code`, `year`, `report_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='财务报表';

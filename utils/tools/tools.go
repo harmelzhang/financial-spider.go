@@ -1,10 +1,12 @@
 package tools
 
 import (
+	"fmt"
 	"github.com/mozillazg/go-pinyin"
 	"golang.org/x/net/html"
 	"log"
 	"os"
+	"reflect"
 	"strings"
 )
 
@@ -103,4 +105,58 @@ func WriteFile(path string, data []byte) {
 	if err != nil {
 		log.Fatalf("写文件出错 : %s", err)
 	}
+}
+
+// MakeUpdateSqlAndArgs 构建更新语句和参数
+func MakeUpdateSqlAndArgs(data interface{}) (string, []interface{}) {
+	rType := reflect.TypeOf(data).Elem()
+	rValue := reflect.ValueOf(data).Elem()
+
+	pkgAndName := strings.Split(rType.String(), ".")
+	tableName := HumpToUnderline(pkgAndName[len(pkgAndName)-1])
+
+	operCols := make([]string, 0) // 操作列
+	operArgs := make([]interface{}, 0)
+	whereCols := make([]string, 0) // 条件列
+	whereArgs := make([]interface{}, 0)
+
+	for i := 0; i < rType.NumField(); i++ {
+		field := rType.Field(i)
+		value := rValue.Field(i)
+
+		fieldNamePrefix := field.Name[0]
+		if fieldNamePrefix >= 'A' && fieldNamePrefix <= 'Z' {
+			dbTag := field.Tag.Get("db")
+			if dbTag == "WHERE" {
+				whereCols = append(whereCols, field.Name)
+				whereArgs = append(whereArgs, value.Interface())
+			} else {
+				operCols = append(operCols, field.Name)
+				operArgs = append(operArgs, value.Interface())
+			}
+		}
+	}
+
+	operSep, whereSep := ", ", " AND " // SQL间隔符
+	var sql = ""
+	var args = make([]interface{}, 0)
+
+	if len(whereCols) != 0 && len(operCols) != 0 {
+		sql += "UPDATE " + tableName
+		sql += " SET "
+		for _, col := range operCols {
+			sql += fmt.Sprintf("%s = ?%s", HumpToUnderline(col), operSep)
+		}
+		sql = sql[:len(sql)-len(operSep)]
+		sql += " WHERE "
+		for _, col := range whereCols {
+			sql += fmt.Sprintf("%s = ?%s", HumpToUnderline(col), whereSep)
+		}
+		sql = sql[:len(sql)-len(whereSep)]
+	}
+
+	args = append(args, operArgs...)
+	args = append(args, whereArgs...)
+
+	return sql, args
 }

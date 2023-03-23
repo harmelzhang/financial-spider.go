@@ -3,6 +3,7 @@ package stock
 import (
 	"encoding/json"
 	cConfig "financial-spider.go/config/category"
+	fConfig "financial-spider.go/config/financial"
 	sConfig "financial-spider.go/config/stock"
 	"financial-spider.go/models"
 	"financial-spider.go/models/vo"
@@ -69,14 +70,19 @@ func QueryStockBaseInfo(code string) {
 func QueryStockFinancialData(code string) {
 	reportDates, reportCount := queryAllReportDate(code)
 
-	log.Printf("查询股票对应公司财报数据（总计 : %d 期）", reportCount)
+	log.Println("查询股票对应公司财报数据")
 
 	for i, reportDate := range reportDates {
 		log.Printf("处理报表进度 : %d / %d", i+1, reportCount)
 
-		processingCashFlowSheet(code, reportDate)
-		processingBalanceSheet(code, reportDate)
-		processingIncomeSheet(code, reportDate)
+		financial := models.NewFinancial(code, reportDate)
+		financial.InitData()
+
+		processingCashFlowSheet(financial)
+		processingBalanceSheet(financial)
+		processingIncomeSheet(financial)
+
+		financial.UpdateData()
 	}
 }
 
@@ -139,16 +145,36 @@ func queryAllReportDate(code string) ([]string, int) {
 }
 
 // 处理现金流量表
-func processingCashFlowSheet(code string, reportDate string) {
+func processingCashFlowSheet(financial *models.Financial) {
+	_, marketShortName := QueryStockMarketPlace(financial.Code)
 
+	log.Println("查询现金流量表数据")
+	url := fmt.Sprintf(fConfig.QueryCashFlowSheetUrl, financial.ReportDate, marketShortName, financial.Code)
+	cashFlowSheetResult := vo.CashFlowSheetResult{}
+	err := json.Unmarshal(http.Get(url), &cashFlowSheetResult)
+	if err != nil {
+		log.Fatalf("解析JSON出错 : %s", err)
+	}
+
+	if cashFlowSheetResult.Type == "1" || cashFlowSheetResult.Status == 1 {
+		log.Printf("跳过查询，没有该期报表数据或参数异常 [%s %s]", financial.Code, financial.ReportDate)
+		return
+	}
+
+	if len(cashFlowSheetResult.Data) != 0 {
+		cashFlowSheetData := cashFlowSheetResult.Data[0]
+		financial.Ocf = cashFlowSheetData.Ocf
+		financial.Cfi = cashFlowSheetData.Cfi
+		financial.Cff = cashFlowSheetData.Cff
+	}
 }
 
 // 处理资产负债表
-func processingBalanceSheet(code string, reportDate string) {
-
+func processingBalanceSheet(financial *models.Financial) {
+	log.Println("查询资产负债表数据")
 }
 
 // 处理利润表
-func processingIncomeSheet(code string, reportDate string) {
-
+func processingIncomeSheet(financial *models.Financial) {
+	log.Println("查询利润表数据")
 }
