@@ -17,6 +17,7 @@ type StockCodeData struct {
 	List []StockCode `json:"list"`
 }
 
+// StockCodeResult 股票代码
 type StockCodeResult struct {
 	Code    string        `json:"code"`
 	Success bool          `json:"success"`

@@ -13,6 +13,7 @@ type CategoryData struct {
 	MapList map[string][]Category `json:"csipeindustryMapList"`
 }
 
+// CategoryResult 行业分类
 type CategoryResult struct {
 	Code    string       `json:"code"`
 	Success bool         `json:"success"`

@@ -18,6 +18,7 @@ type StockListingInfo struct {
 	ListingDate         interface{} `json:"LISTING_DATE"` // 上市日期
 }
 
+// StockBaseInfoResult 股票基本信息
 type StockBaseInfoResult struct {
 	BaseInfo    []StockBaseInfo    `json:"jbzl"` // 基本信息
 	ListingInfo []StockListingInfo `json:"fxxg"` // 发行相关
@@ -51,6 +52,7 @@ type StockReportDate struct {
 	Type string `json:"REPORT_TYPE"`
 }
 
+// StockReportDateResult 报告期
 type StockReportDateResult struct {
 	Count int               `json:"count"`
 	Pages int               `json:"pages"`

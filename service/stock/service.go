@@ -84,6 +84,8 @@ func QueryStockFinancialData(code string) {
 
 		financial.UpdateData()
 	}
+
+	processingDividend(code)
 }
 
 // QueryStockMarketPlace 查询股票交易市场名称和简称（SH、SZ、BJ）
@@ -169,12 +171,46 @@ func processingCashFlowSheet(financial *models.Financial) {
 	}
 }
 
+// 处理分红数据
+func processingDividend(code string) {
+	log.Println("查询分红数据")
+	url := fmt.Sprintf(fConfig.QueryDividendUrl, code)
+	dividendResult := vo.DividendResult{}
+	err := json.Unmarshal(http.Get(url), &dividendResult)
+	if err != nil {
+		log.Fatalf("解析JSON出错 : %s", err)
+	}
+
+	if dividendResult.Code == 0 && dividendResult.Success {
+		for _, dividend := range dividendResult.Result.Data {
+
+			reportDate := dividend.Year + "-12-31"
+			financial := models.NewFinancial(code, reportDate)
+			financial.InitData()
+
+			financial.Dividend = dividend.Money
+			financial.UpdateData()
+		}
+	} else {
+		log.Printf("获取分红数据失败，跳过查询 > Code:%d, Msg: %s", dividendResult.Code, dividendResult.Message)
+	}
+
+}
+
 // 处理资产负债表
 func processingBalanceSheet(financial *models.Financial) {
+	_, marketShortName := QueryStockMarketPlace(financial.Code)
+
 	log.Println("查询资产负债表数据")
+	url := fmt.Sprintf(fConfig.QueryBalanceSheetUrl, financial.ReportDate, marketShortName, financial.Code)
+	fmt.Println(url)
 }
 
 // 处理利润表
 func processingIncomeSheet(financial *models.Financial) {
+	_, marketShortName := QueryStockMarketPlace(financial.Code)
+
 	log.Println("查询利润表数据")
+	url := fmt.Sprintf(fConfig.QueryIncomeSheetUrl, financial.ReportDate, marketShortName, financial.Code)
+	fmt.Println(url)
 }
