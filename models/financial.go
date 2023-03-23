@@ -13,6 +13,8 @@ type Financial struct {
 	ReportDate string `db:"WHERE"` // 财报季期
 	reportType string // 季期类型（Q1~Q4，分别代表：一季报、半年报、三季报、年报；O，代表：其他）
 
+	Dividend interface{} // 年度分红金额
+
 	Ocf interface{} // 营业活动现金流量
 	Cfi interface{} // 投资活动现金流量
 	Cff interface{} // 筹资活动现金流量
@@ -43,7 +45,7 @@ func (financial *Financial) InitData() {
 	args := []interface{}{financial.Code, financial.year, financial.ReportDate}
 	result := db.ExecSQL(sql, args...)
 
-	if result[0]["cnt"] == 0 {
+	if result[0]["cnt"].(int64) == 0 {
 		sql = "INSERT INTO financial(code, year, report_date, report_type) VALUES(?, ?, ?, ?)"
 		args = append(args, financial.reportType)
 		db.ExecSQL(sql, args...)
