@@ -222,6 +222,8 @@ func processingBalanceSheet(financial *models.Financial) {
 		balanceSheetData := balanceSheet.Data[0]
 		financial.CaTotal = balanceSheetData.CaTotal
 		financial.NcaTotal = balanceSheetData.NcaTotal
+		financial.ClTotal = balanceSheetData.ClTotal
+		financial.NclTotal = balanceSheetData.NclTotal
 	}
 }
 

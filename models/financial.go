@@ -27,6 +27,8 @@ type Financial struct {
 
 	CaTotal  interface{} // 流动资产总额
 	NcaTotal interface{} // 非流动资产总额
+	ClTotal  interface{} // 流动负债总额
+	NclTotal interface{} // 非流动负债产总额
 }
 
 // NewFinancial 新建财务报表对象

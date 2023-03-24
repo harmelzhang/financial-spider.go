@@ -13,6 +13,8 @@ type FinancialData struct {
 
 	CaTotal  interface{} `json:"TOTAL_CURRENT_ASSETS"`    // 流动资产总额
 	NcaTotal interface{} `json:"TOTAL_NONCURRENT_ASSETS"` // 非流动资产总额
+	ClTotal  interface{} `json:"TOTAL_CURRENT_LIAB"`      // 流动负债总额
+	NclTotal interface{} `json:"TOTAL_NONCURRENT_LIAB"`   // 非流动负债产总额
 }
 
 // FinancialResult 现金流量表
