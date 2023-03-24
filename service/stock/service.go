@@ -233,6 +233,7 @@ func processingIncomeSheet(financial *models.Financial) {
 		financial.Oi = incomeSheetData.Oi
 		financial.Coe = incomeSheetData.Coe
 		financial.CoeTotal = incomeSheetData.CoeTotal
+		financial.Eps = incomeSheetData.Eps
 	}
 
 }
