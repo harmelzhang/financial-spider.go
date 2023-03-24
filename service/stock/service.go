@@ -87,6 +87,8 @@ func QueryStockFinancialData(code string) {
 	}
 
 	processingDividend(code)
+
+	calcFinancialRatio(code)
 }
 
 // QueryStockMarketPlace 查询股票交易市场名称和简称（SH、SZ、BJ）
@@ -153,7 +155,7 @@ func processingCashFlowSheet(financial *models.Financial) {
 
 	log.Println("查询现金流量表数据")
 	url := fmt.Sprintf(fConfig.QueryCashFlowSheetUrl, financial.ReportDate, marketShortName, financial.Code)
-	cashFlowSheetResult := vo.CashFlowSheetResult{}
+	cashFlowSheetResult := vo.FinancialResult{}
 	err := json.Unmarshal(http.Get(url), &cashFlowSheetResult)
 	if err != nil {
 		log.Fatalf("解析JSON出错 : %s", err)
@@ -214,5 +216,32 @@ func processingIncomeSheet(financial *models.Financial) {
 
 	log.Println("查询利润表数据")
 	url := fmt.Sprintf(fConfig.QueryIncomeSheetUrl, financial.ReportDate, marketShortName, financial.Code)
-	fmt.Println(url)
+	incomeSheet := vo.FinancialResult{}
+	err := json.Unmarshal(http.Get(url), &incomeSheet)
+	if err != nil {
+		log.Fatalf("解析JSON出错 : %s", err)
+	}
+
+	if incomeSheet.Type == "1" || incomeSheet.Status == 1 {
+		log.Printf("跳过查询，没有该期报表数据或参数异常 [%s %s]", financial.Code, financial.ReportDate)
+		return
+	}
+
+	if len(incomeSheet.Data) != 0 {
+		incomeSheetData := incomeSheet.Data[0]
+		financial.Np = incomeSheetData.Np
+	}
+
+}
+
+// 计算财务比率
+func calcFinancialRatio(code string) {
+	sql := `
+		UPDATE financial
+		SET
+		    dividend_ratio = ROUND(dividend / np * 100, 2)
+		WHERE code = ?
+	`
+	args := []interface{}{code}
+	db.ExecSQL(sql, args...)
 }

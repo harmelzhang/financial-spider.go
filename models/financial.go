@@ -18,6 +18,8 @@ type Financial struct {
 	Ocf interface{} // 营业活动现金流量
 	Cfi interface{} // 投资活动现金流量
 	Cff interface{} // 筹资活动现金流量
+
+	Np interface{} // 净利润
 }
 
 // NewFinancial 新建财务报表对象

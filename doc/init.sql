@@ -63,9 +63,11 @@ CREATE TABLE `financial` (
     `year` CHAR(4) NOT NULL COMMENT '年份',
     `report_date` DATE NOT NULL COMMENT '财报季期',
     `report_type` VARCHAR(2) NOT NULL COMMENT '季期类型（Q1~Q4，分别代表：一季报、半年报、三季报、年报；O，代表：其他）',
-    `dividend` DOUBLE DEFAULT NULL COMMENT '年度分红金额',
+    `dividend` DOUBLE DEFAULT NULL COMMENT '年度分红总金额',
     `ocf` DOUBLE DEFAULT NULL COMMENT '营业活动现金流量',
     `cfi` DOUBLE DEFAULT NULL COMMENT '投资活动现金流量',
     `cff` DOUBLE DEFAULT NULL COMMENT '筹资活动现金流量',
+    `np` DOUBLE DEFAULT NULL COMMENT '净利润',
+    `dividend_ratio` DOUBLE DEFAULT NULL COMMENT '分红率：分红总金额 / 净利润',
     PRIMARY KEY (`code`, `year`, `report_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='财务报表';
