@@ -68,6 +68,13 @@ CREATE TABLE `financial` (
     `cfi` DOUBLE DEFAULT NULL COMMENT '投资活动现金流量',
     `cff` DOUBLE DEFAULT NULL COMMENT '筹资活动现金流量',
     `np` DOUBLE DEFAULT NULL COMMENT '净利润',
+    `oi` DOUBLE DEFAULT NULL COMMENT '营业收入',
+    `coe` DOUBLE DEFAULT NULL COMMENT '营业成本',
+    `coe_total` DOUBLE DEFAULT NULL COMMENT '营业总成本（含各种费用，销售费用、管理费用等）',
+    `np_ratio` DOUBLE DEFAULT NULL COMMENT '净利率：净利润 / 营业收入',
     `dividend_ratio` DOUBLE DEFAULT NULL COMMENT '分红率：分红总金额 / 净利润',
+    `oi_ratio` DOUBLE DEFAULT NULL COMMENT '营业毛利率：(营业收入 - 营业成本) / 营业收入',
+    `operating_profit_ratio` DOUBLE DEFAULT NULL COMMENT '营业利益率|营业利润率：(营业收入 - 营业成本 - 营业费用) / 营业收入',
+    `operating_safety_ratio` DOUBLE DEFAULT NULL COMMENT '经营安全边际率：营业利益率 / 营业毛利率',
     PRIMARY KEY (`code`, `year`, `report_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='财务报表';

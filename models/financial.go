@@ -19,7 +19,10 @@ type Financial struct {
 	Cfi interface{} // 投资活动现金流量
 	Cff interface{} // 筹资活动现金流量
 
-	Np interface{} // 净利润
+	Np       interface{} // 净利润
+	Oi       interface{} // 营业收入
+	Coe      interface{} // 营业成本
+	CoeTotal interface{} // 营业总成本（含各种费用，销售费用、管理费用等）
 }
 
 // NewFinancial 新建财务报表对象

@@ -230,6 +230,9 @@ func processingIncomeSheet(financial *models.Financial) {
 	if len(incomeSheet.Data) != 0 {
 		incomeSheetData := incomeSheet.Data[0]
 		financial.Np = incomeSheetData.Np
+		financial.Oi = incomeSheetData.Oi
+		financial.Coe = incomeSheetData.Coe
+		financial.CoeTotal = incomeSheetData.CoeTotal
 	}
 
 }
@@ -239,7 +242,11 @@ func calcFinancialRatio(code string) {
 	sql := `
 		UPDATE financial
 		SET
-		    dividend_ratio = ROUND(dividend / np * 100, 2)
+		    np_ratio = ROUND(np / oi * 100, 2),
+		    dividend_ratio = ROUND(dividend / np * 100, 2),
+		    oi_ratio = ROUND((oi - coe) / oi * 100, 2),
+		    operating_profit_ratio = ROUND((oi - coe_total) / oi * 100, 2),
+		    operating_safety_ratio = ROUND(operating_profit_ratio / oi_ratio * 100, 2)
 		WHERE code = ?
 	`
 	args := []interface{}{code}

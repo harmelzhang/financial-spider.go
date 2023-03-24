@@ -5,7 +5,10 @@ type FinancialData struct {
 	Cfi interface{} `json:"NETCASH_INVEST"`  // 投资活动产生的现金流量净额
 	Cff interface{} `json:"NETCASH_FINANCE"` // 筹资活动产生的现金流量净额
 
-	Np interface{} `json:"NETPROFIT"` // 净利润
+	Np       interface{} `json:"NETPROFIT"`            // 净利润
+	Oi       interface{} `json:"TOTAL_OPERATE_INCOME"` // 营业收入
+	Coe      interface{} `json:"OPERATE_COST"`         // 营业成本
+	CoeTotal interface{} `json:"TOTAL_OPERATE_COST"`   // 营业总成本（含各种费用，销售费用、管理费用等）
 }
 
 // FinancialResult 现金流量表
