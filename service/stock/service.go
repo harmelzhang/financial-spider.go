@@ -80,8 +80,8 @@ func QueryStockFinancialData(code string) {
 		financial.InitData()
 
 		processingCashFlowSheet(financial)
-		processingBalanceSheet(financial)
 		processingIncomeSheet(financial)
+		processingBalanceSheet(financial)
 
 		financial.UpdateData()
 	}
@@ -207,7 +207,22 @@ func processingBalanceSheet(financial *models.Financial) {
 
 	log.Println("查询资产负债表数据")
 	url := fmt.Sprintf(fConfig.QueryBalanceSheetUrl, financial.ReportDate, marketShortName, financial.Code)
-	fmt.Println(url)
+	balanceSheet := vo.FinancialResult{}
+	err := json.Unmarshal(http.Get(url), &balanceSheet)
+	if err != nil {
+		log.Fatalf("解析JSON出错 : %s", err)
+	}
+
+	if balanceSheet.Type == "1" || balanceSheet.Status == 1 {
+		log.Printf("跳过查询，没有该期报表数据或参数异常 [%s %s]", financial.Code, financial.ReportDate)
+		return
+	}
+
+	if len(balanceSheet.Data) != 0 {
+		balanceSheetData := balanceSheet.Data[0]
+		financial.CaTotal = balanceSheetData.CaTotal
+		financial.NcaTotal = balanceSheetData.NcaTotal
+	}
 }
 
 // 处理利润表
