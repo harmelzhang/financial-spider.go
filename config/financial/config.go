@@ -11,3 +11,6 @@ const QueryIncomeSheetUrl = "https://emweb.securities.eastmoney.com/NewFinanceAn
 
 // QueryDividendUrl 查询分红数据接口
 const QueryDividendUrl = "https://datacenter.eastmoney.com/securities/api/data/v1/get?reportName=RPT_F10_DIVIDEND_COMPRE&columns=TOTAL_DIVIDEND,STATISTICS_YEAR&filter=(SECURITY_CODE=%s)"
+
+// QueryPageSize 每次取财报数据时，传入的报告期数，最大值为5
+const QueryPageSize = 5

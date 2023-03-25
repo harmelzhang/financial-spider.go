@@ -69,20 +69,32 @@ func QueryStockBaseInfo(code string) {
 
 // QueryStockFinancialData 查询股票对应公司财报数据
 func QueryStockFinancialData(code string) {
-	reportDates, reportCount := queryAllReportDate(code)
+	allReportDates, _ := queryAllReportDate(code)
 
 	log.Println("查询股票对应公司财报数据")
 
-	for i, reportDate := range reportDates {
-		log.Printf("处理报表进度 : %d / %d", i+1, reportCount)
-
+	// 初始化操作
+	financials := make([]*models.Financial, 0)
+	for _, reportDate := range allReportDates {
 		financial := models.NewFinancial(code, reportDate)
 		financial.InitData()
 
-		processingCashFlowSheet(financial)
-		processingIncomeSheet(financial)
-		processingBalanceSheet(financial)
+		financials = append(financials, financial)
+	}
 
+	reportDatePages, pageTotal := tools.ArraySlice(allReportDates, fConfig.QueryPageSize) // 分页查询，减少请求量
+	for i, reportDates := range reportDatePages {
+		log.Printf("处理报表进度 : %d / %d", i+1, pageTotal)
+
+		queryDates := strings.Join(reportDates, ",")
+
+		processingCashFlowSheet(financials, code, queryDates)
+		processingIncomeSheet(financials, code, queryDates)
+		processingBalanceSheet(financials, code, queryDates)
+	}
+
+	// 财报数据入库（也可以在每个处理函数中进行，但是会增加数据库的操作，好处是每次都能更新一部分数据）
+	for _, financial := range financials {
 		financial.UpdateData()
 	}
 
@@ -103,6 +115,16 @@ func QueryStockMarketPlace(code string) (string, string) {
 		name, shortName = "北京", "BJ"
 	}
 	return name, shortName
+}
+
+// 根据股票代码和报告期查询财报
+func queryFinancialByCodeAndReportDate(financials []*models.Financial, code string, reportDate string) *models.Financial {
+	for _, financial := range financials {
+		if financial.Code == code && financial.ReportDate == reportDate {
+			return financial
+		}
+	}
+	return nil
 }
 
 // 查询所有报告期
@@ -150,11 +172,11 @@ func queryAllReportDate(code string) ([]string, int) {
 }
 
 // 处理现金流量表
-func processingCashFlowSheet(financial *models.Financial) {
-	_, marketShortName := QueryStockMarketPlace(financial.Code)
+func processingCashFlowSheet(financials []*models.Financial, code string, queryDates string) {
+	_, marketShortName := QueryStockMarketPlace(code)
 
 	log.Println("查询现金流量表数据")
-	url := fmt.Sprintf(fConfig.QueryCashFlowSheetUrl, financial.ReportDate, marketShortName, financial.Code)
+	url := fmt.Sprintf(fConfig.QueryCashFlowSheetUrl, queryDates, marketShortName, code)
 	cashFlowSheetResult := vo.FinancialResult{}
 	err := json.Unmarshal(http.Get(url), &cashFlowSheetResult)
 	if err != nil {
@@ -162,15 +184,19 @@ func processingCashFlowSheet(financial *models.Financial) {
 	}
 
 	if cashFlowSheetResult.Type == "1" || cashFlowSheetResult.Status == 1 {
-		log.Printf("跳过查询，没有该期报表数据或参数异常 [%s %s]", financial.Code, financial.ReportDate)
+		log.Printf("跳过查询，没有该期报表数据或参数异常 [%s %s]", code, queryDates)
 		return
 	}
 
 	if len(cashFlowSheetResult.Data) != 0 {
-		cashFlowSheetData := cashFlowSheetResult.Data[0]
-		financial.Ocf = cashFlowSheetData.Ocf
-		financial.Cfi = cashFlowSheetData.Cfi
-		financial.Cff = cashFlowSheetData.Cff
+		for _, cashFlowSheetData := range cashFlowSheetResult.Data {
+			reportDate := strings.Split(cashFlowSheetData.ReportDate, " ")[0]
+
+			financial := queryFinancialByCodeAndReportDate(financials, code, reportDate)
+			financial.Ocf = cashFlowSheetData.Ocf
+			financial.Cfi = cashFlowSheetData.Cfi
+			financial.Cff = cashFlowSheetData.Cff
+		}
 	}
 }
 
@@ -202,11 +228,11 @@ func processingDividend(code string) {
 }
 
 // 处理资产负债表
-func processingBalanceSheet(financial *models.Financial) {
-	_, marketShortName := QueryStockMarketPlace(financial.Code)
+func processingBalanceSheet(financials []*models.Financial, code string, queryDates string) {
+	_, marketShortName := QueryStockMarketPlace(code)
 
 	log.Println("查询资产负债表数据")
-	url := fmt.Sprintf(fConfig.QueryBalanceSheetUrl, financial.ReportDate, marketShortName, financial.Code)
+	url := fmt.Sprintf(fConfig.QueryBalanceSheetUrl, queryDates, marketShortName, code)
 	balanceSheet := vo.FinancialResult{}
 	err := json.Unmarshal(http.Get(url), &balanceSheet)
 	if err != nil {
@@ -214,25 +240,29 @@ func processingBalanceSheet(financial *models.Financial) {
 	}
 
 	if balanceSheet.Type == "1" || balanceSheet.Status == 1 {
-		log.Printf("跳过查询，没有该期报表数据或参数异常 [%s %s]", financial.Code, financial.ReportDate)
+		log.Printf("跳过查询，没有该期报表数据或参数异常 [%s %s]", code, queryDates)
 		return
 	}
 
 	if len(balanceSheet.Data) != 0 {
-		balanceSheetData := balanceSheet.Data[0]
-		financial.CaTotal = balanceSheetData.CaTotal
-		financial.NcaTotal = balanceSheetData.NcaTotal
-		financial.ClTotal = balanceSheetData.ClTotal
-		financial.NclTotal = balanceSheetData.NclTotal
+		for _, balanceSheetData := range balanceSheet.Data {
+			reportDate := strings.Split(balanceSheetData.ReportDate, " ")[0]
+
+			financial := queryFinancialByCodeAndReportDate(financials, code, reportDate)
+			financial.CaTotal = balanceSheetData.CaTotal
+			financial.NcaTotal = balanceSheetData.NcaTotal
+			financial.ClTotal = balanceSheetData.ClTotal
+			financial.NclTotal = balanceSheetData.NclTotal
+		}
 	}
 }
 
 // 处理利润表
-func processingIncomeSheet(financial *models.Financial) {
-	_, marketShortName := QueryStockMarketPlace(financial.Code)
+func processingIncomeSheet(financials []*models.Financial, code string, queryDates string) {
+	_, marketShortName := QueryStockMarketPlace(code)
 
 	log.Println("查询利润表数据")
-	url := fmt.Sprintf(fConfig.QueryIncomeSheetUrl, financial.ReportDate, marketShortName, financial.Code)
+	url := fmt.Sprintf(fConfig.QueryIncomeSheetUrl, queryDates, marketShortName, code)
 	incomeSheet := vo.FinancialResult{}
 	err := json.Unmarshal(http.Get(url), &incomeSheet)
 	if err != nil {
@@ -240,17 +270,21 @@ func processingIncomeSheet(financial *models.Financial) {
 	}
 
 	if incomeSheet.Type == "1" || incomeSheet.Status == 1 {
-		log.Printf("跳过查询，没有该期报表数据或参数异常 [%s %s]", financial.Code, financial.ReportDate)
+		log.Printf("跳过查询，没有该期报表数据或参数异常 [%s %s]", code, queryDates)
 		return
 	}
 
 	if len(incomeSheet.Data) != 0 {
-		incomeSheetData := incomeSheet.Data[0]
-		financial.Np = incomeSheetData.Np
-		financial.Oi = incomeSheetData.Oi
-		financial.Coe = incomeSheetData.Coe
-		financial.CoeTotal = incomeSheetData.CoeTotal
-		financial.Eps = incomeSheetData.Eps
+		for _, incomeSheetData := range incomeSheet.Data {
+			reportDate := strings.Split(incomeSheetData.ReportDate, " ")[0]
+
+			financial := queryFinancialByCodeAndReportDate(financials, code, reportDate)
+			financial.Np = incomeSheetData.Np
+			financial.Oi = incomeSheetData.Oi
+			financial.Coe = incomeSheetData.Coe
+			financial.CoeTotal = incomeSheetData.CoeTotal
+			financial.Eps = incomeSheetData.Eps
+		}
 	}
 
 }

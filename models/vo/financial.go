@@ -1,6 +1,8 @@
 package vo
 
 type FinancialData struct {
+	ReportDate string `json:"REPORT_DATE"` // 报告期：yyyy-MM-dd HH:mm:ss
+
 	Ocf interface{} `json:"NETCASH_OPERATE"` // 经营活动产生的现金流量净额
 	Cfi interface{} `json:"NETCASH_INVEST"`  // 投资活动产生的现金流量净额
 	Cff interface{} `json:"NETCASH_FINANCE"` // 筹资活动产生的现金流量净额

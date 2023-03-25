@@ -74,6 +74,8 @@ CREATE TABLE `financial` (
     `eps` DOUBLE DEFAULT NULL COMMENT '每股盈余|基本每股收益',
     `ca_total` DOUBLE DEFAULT NULL COMMENT '流动资产总额',
     `nca_total` DOUBLE DEFAULT NULL COMMENT '非流动资产总额',
+    `cl_total` DOUBLE DEFAULT NULL COMMENT '流动负债总额',
+    `ncl_total` DOUBLE DEFAULT NULL COMMENT '非流动负债总额',
     `np_ratio` DOUBLE DEFAULT NULL COMMENT '净利率：净利润 / 营业收入',
     `dividend_ratio` DOUBLE DEFAULT NULL COMMENT '分红率：分红总金额 / 净利润',
     `oi_ratio` DOUBLE DEFAULT NULL COMMENT '营业毛利率：(营业收入 - 营业成本) / 营业收入',
