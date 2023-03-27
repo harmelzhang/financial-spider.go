@@ -298,7 +298,11 @@ func calcFinancialRatio(code string) {
 		    dividend_ratio = ROUND(dividend / np * 100, 2),
 		    oi_ratio = ROUND((oi - coe) / oi * 100, 2),
 		    operating_profit_ratio = ROUND((oi - coe_total) / oi * 100, 2),
-		    operating_safety_ratio = ROUND(operating_profit_ratio / oi_ratio * 100, 2)
+		    operating_safety_ratio = ROUND(operating_profit_ratio / oi_ratio * 100, 2),
+		    cl_ratio = ROUND(cl_total / (ca_total + nca_total) * 100, 2),
+		    ncl_ratio = ROUND(ncl_total / (ca_total + nca_total) * 100, 2),
+		    debt_ratio = ROUND((cl_total + ncl_total) / (ca_total + nca_total) * 100, 2),
+		    equity_ratio = ROUND(100 - debt_ratio, 2)
 		WHERE code = ?
 	`
 	args := []interface{}{code}

@@ -81,5 +81,9 @@ CREATE TABLE `financial` (
     `oi_ratio` DOUBLE DEFAULT NULL COMMENT '营业毛利率：(营业收入 - 营业成本) / 营业收入',
     `operating_profit_ratio` DOUBLE DEFAULT NULL COMMENT '营业利益率|营业利润率：(营业收入 - 营业成本 - 营业费用) / 营业收入',
     `operating_safety_ratio` DOUBLE DEFAULT NULL COMMENT '经营安全边际率：营业利益率 / 营业毛利率',
+    `cl_ratio` DOUBLE DEFAULT NULL COMMENT '流动负债比率',
+    `ncl_ratio` DOUBLE DEFAULT NULL COMMENT '长期负债比率',
+    `debt_ratio` DOUBLE DEFAULT NULL COMMENT '负债比率',
+    `equity_ratio` DOUBLE DEFAULT NULL COMMENT '股东权益比率',
     PRIMARY KEY (`code`, `year`, `report_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='财务报表';
