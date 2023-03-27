@@ -25,11 +25,12 @@ type Financial struct {
 	CoeTotal interface{} // 营业总成本（含各种费用，销售费用、管理费用等）
 	Eps      interface{} // 每股盈余|基本每股收益
 
-	CaTotal   interface{} // 流动资产总额
-	NcaTotal  interface{} // 非流动资产总额
-	ClTotal   interface{} // 流动负债总额
-	NclTotal  interface{} // 非流动负债产总额
-	Inventory interface{} // 存货
+	CaTotal      interface{} // 流动资产总额
+	NcaTotal     interface{} // 非流动资产总额
+	ClTotal      interface{} // 流动负债总额
+	NclTotal     interface{} // 非流动负债产总额
+	Inventory    interface{} // 存货
+	AccountsRece interface{} // 应收账款
 }
 
 // NewFinancial 新建财务报表对象

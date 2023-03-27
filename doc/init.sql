@@ -77,6 +77,7 @@ CREATE TABLE `financial` (
     `cl_total` DOUBLE DEFAULT NULL COMMENT '流动负债总额',
     `ncl_total` DOUBLE DEFAULT NULL COMMENT '非流动负债总额',
     `inventory` DOUBLE DEFAULT NULL COMMENT '存货',
+    `accounts_rece` DOUBLE DEFAULT NULL COMMENT '应收账款',
     `np_ratio` DOUBLE DEFAULT NULL COMMENT '净利率：净利润 / 营业收入',
     `dividend_ratio` DOUBLE DEFAULT NULL COMMENT '分红率：分红总金额 / 净利润',
     `oi_ratio` DOUBLE DEFAULT NULL COMMENT '营业毛利率：(营业收入 - 营业成本) / 营业收入',
@@ -87,5 +88,6 @@ CREATE TABLE `financial` (
     `debt_ratio` DOUBLE DEFAULT NULL COMMENT '负债比率：(流动负债总额 + 非流动负债总额) / (流动资产总额 + 非流动资产总额)',
     `equity_ratio` DOUBLE DEFAULT NULL COMMENT '股东权益比率：100 - 负债比率',
     `inventory_ratio` DOUBLE DEFAULT NULL COMMENT '存货比率：存货 / (流动资产总额 + 非流动资产总额)',
+    `accounts_rece_ratio` DOUBLE DEFAULT NULL COMMENT '应收账款比率：应收账款 / (流动资产总额 + 非流动资产总额)',
     PRIMARY KEY (`code`, `year`, `report_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='财务报表';
