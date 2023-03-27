@@ -253,6 +253,7 @@ func processingBalanceSheet(financials []*models.Financial, code string, queryDa
 			financial.NcaTotal = balanceSheetData.NcaTotal
 			financial.ClTotal = balanceSheetData.ClTotal
 			financial.NclTotal = balanceSheetData.NclTotal
+			financial.Inventory = balanceSheetData.Inventory
 		}
 	}
 }
@@ -302,7 +303,8 @@ func calcFinancialRatio(code string) {
 		    cl_ratio = ROUND(cl_total / (ca_total + nca_total) * 100, 2),
 		    ncl_ratio = ROUND(ncl_total / (ca_total + nca_total) * 100, 2),
 		    debt_ratio = ROUND((cl_total + ncl_total) / (ca_total + nca_total) * 100, 2),
-		    equity_ratio = ROUND(100 - debt_ratio, 2)
+		    equity_ratio = ROUND(100 - debt_ratio, 2),
+		    inventory_ratio = ROUND(inventory / (ca_total + nca_total) * 100, 2)
 		WHERE code = ?
 	`
 	args := []interface{}{code}
