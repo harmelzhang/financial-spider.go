@@ -13,12 +13,13 @@ type FinancialData struct {
 	CoeTotal interface{} `json:"TOTAL_OPERATE_COST"`   // 营业总成本（含各种费用，销售费用、管理费用等）
 	Eps      interface{} `json:"BASIC_EPS"`            // 每股盈余|基本每股收益
 
-	CaTotal      interface{} `json:"TOTAL_CURRENT_ASSETS"`    // 流动资产总额
-	NcaTotal     interface{} `json:"TOTAL_NONCURRENT_ASSETS"` // 非流动资产总额
-	ClTotal      interface{} `json:"TOTAL_CURRENT_LIAB"`      // 流动负债总额
-	NclTotal     interface{} `json:"TOTAL_NONCURRENT_LIAB"`   // 非流动负债产总额
-	Inventory    interface{} `json:"INVENTORY"`               // 存货
-	AccountsRece interface{} `json:"ACCOUNTS_RECE"`           // 应收账款
+	CaTotal         interface{} `json:"TOTAL_CURRENT_ASSETS"`    // 流动资产总额
+	NcaTotal        interface{} `json:"TOTAL_NONCURRENT_ASSETS"` // 非流动资产总额
+	ClTotal         interface{} `json:"TOTAL_CURRENT_LIAB"`      // 流动负债总额
+	NclTotal        interface{} `json:"TOTAL_NONCURRENT_LIAB"`   // 非流动负债产总额
+	Inventory       interface{} `json:"INVENTORY"`               // 存货
+	AccountsRece    interface{} `json:"ACCOUNTS_RECE"`           // 应收账款
+	AccountsPayable interface{} `json:"ACCOUNTS_PAYABLE"`        // 应付账款
 }
 
 // FinancialResult 现金流量表
