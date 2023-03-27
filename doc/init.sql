@@ -92,5 +92,7 @@ CREATE TABLE `financial` (
     `inventory_ratio` DOUBLE DEFAULT NULL COMMENT '存货比率：存货 / (流动资产总额 + 非流动资产总额)',
     `accounts_rece_ratio` DOUBLE DEFAULT NULL COMMENT '应收账款比率：应收账款 / (流动资产总额 + 非流动资产总额)',
     `accounts_payable_ratio` DOUBLE DEFAULT NULL COMMENT '应付账款比率：应付账款 / (流动资产总额 + 非流动资产总额)',
+    `current_ratio` DOUBLE DEFAULT NULL COMMENT '流动比率：流动资产 / 流动负债',
+    `quick_ratio` DOUBLE DEFAULT NULL COMMENT '速动比率：(流动资产 - 存货) / 流动负债',
     PRIMARY KEY (`code`, `year`, `report_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='财务报表';

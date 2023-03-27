@@ -309,7 +309,9 @@ func calcFinancialRatio(code string) {
 		    equity_ratio = ROUND(100 - debt_ratio, 2),
 		    inventory_ratio = ROUND(inventory / (ca_total + nca_total) * 100, 2),
 		    accounts_rece_ratio = ROUND(accounts_rece / (ca_total + nca_total) * 100, 2),
-		    accounts_payable_ratio = ROUND(accounts_payable / (ca_total + nca_total) * 100, 2)
+		    accounts_payable_ratio = ROUND(accounts_payable / (ca_total + nca_total) * 100, 2),
+		    current_ratio = ROUND(ca_total / cl_total * 100, 2),
+		    quick_ratio = ROUND((ca_total - inventory) / cl_total * 100, 2)
 		WHERE code = ?
 	`
 	args := []interface{}{code}
