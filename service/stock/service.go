@@ -249,6 +249,10 @@ func processingBalanceSheet(financials []*models.Financial, code string, queryDa
 			reportDate := strings.Split(balanceSheetData.ReportDate, " ")[0]
 
 			financial := queryFinancialByCodeAndReportDate(financials, code, reportDate)
+			financial.MonetaryFund = balanceSheetData.MonetaryFund
+			financial.TradeFinassetNotfvtpl = balanceSheetData.TradeFinassetNotfvtpl
+			financial.TradeFinasset = balanceSheetData.TradeFinasset
+			financial.DeriveFinasset = balanceSheetData.DeriveFinasset
 			financial.CaTotal = balanceSheetData.CaTotal
 			financial.NcaTotal = balanceSheetData.NcaTotal
 			financial.ClTotal = balanceSheetData.ClTotal
@@ -302,6 +306,7 @@ func calcFinancialRatio(code string) {
 		    oi_ratio = ROUND((oi - coe) / oi * 100, 2),
 		    operating_profit_ratio = ROUND((oi - coe_total) / oi * 100, 2),
 		    operating_safety_ratio = ROUND(operating_profit_ratio / oi_ratio * 100, 2),
+		    cash_equivalent_ratio = ROUND((monetary_fund + IFNULL(IFNULL(trade_finasset, trade_finasset_notfvtpl), 0) + IFNULL(derive_finasset, 0)) / (ca_total + nca_total) * 100, 2),
 		    ca_ratio = ROUND(ca_total / (ca_total + nca_total) * 100, 2),
 		    cl_ratio = ROUND(cl_total / (ca_total + nca_total) * 100, 2),
 		    ncl_ratio = ROUND(ncl_total / (ca_total + nca_total) * 100, 2),

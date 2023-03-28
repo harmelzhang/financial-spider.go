@@ -13,6 +13,11 @@ type FinancialData struct {
 	CoeTotal interface{} `json:"TOTAL_OPERATE_COST"`   // 营业总成本（含各种费用，销售费用、管理费用等）
 	Eps      interface{} `json:"BASIC_EPS"`            // 每股盈余|基本每股收益
 
+	MonetaryFund          interface{} `json:"MONETARYFUNDS"`           // 货币资金
+	TradeFinassetNotfvtpl interface{} `json:"TRADE_FINASSET_NOTFVTPL"` // 交易性金融资产
+	TradeFinasset         interface{} `json:"TRADE_FINASSET"`          // 交易性金融资产（历史遗留）
+	DeriveFinasset        interface{} `json:"DERIVE_FINASSET"`         // 衍生金融资产
+
 	CaTotal         interface{} `json:"TOTAL_CURRENT_ASSETS"`    // 流动资产总额
 	NcaTotal        interface{} `json:"TOTAL_NONCURRENT_ASSETS"` // 非流动资产总额
 	ClTotal         interface{} `json:"TOTAL_CURRENT_LIAB"`      // 流动负债总额
