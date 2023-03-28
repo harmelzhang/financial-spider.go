@@ -98,5 +98,7 @@ CREATE TABLE `financial` (
     `roa` DOUBLE DEFAULT NULL COMMENT '总资产报酬率：净利润 / (流动资产总额 + 非流动资产总额)',
     `accounts_rece_turnover_ratio` DOUBLE DEFAULT NULL COMMENT '应收账款周转率（次）：营业收入 / 应收账款',
     `average_cash_receipt_days` DOUBLE DEFAULT NULL COMMENT '平均收现天数：360 / 应收账款周转率',
+    `inventory_turnover_ratio` DOUBLE DEFAULT NULL COMMENT '存货周转率（次）：营业成本 / 存货',
+    `average_sales_days` DOUBLE DEFAULT NULL COMMENT '平均销货天数：360 / 存货周转率',
     PRIMARY KEY (`code`, `year`, `report_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='财务报表';
