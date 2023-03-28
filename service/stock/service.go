@@ -318,6 +318,7 @@ func calcFinancialRatio(code string) {
 		    average_cash_receipt_days = ROUND(360 / accounts_rece_turnover_ratio, 2),
 		    inventory_turnover_ratio = ROUND(coe / inventory, 2),
 		    average_sales_days = ROUND(360 / inventory_turnover_ratio, 2),
+		    total_asset_turnover_ratio = ROUND(oi / (ca_total + nca_total), 2),
 		WHERE code = ?
 	`
 	args := []interface{}{code}
