@@ -67,6 +67,7 @@ CREATE TABLE `financial` (
     `ocf` DOUBLE DEFAULT NULL COMMENT '营业活动现金流量',
     `cfi` DOUBLE DEFAULT NULL COMMENT '投资活动现金流量',
     `cff` DOUBLE DEFAULT NULL COMMENT '筹资活动现金流量',
+    `assign_dividend_porfit` DOUBLE DEFAULT NULL COMMENT '分配股利、利润或偿付利息支付的现金',
     `np` DOUBLE DEFAULT NULL COMMENT '净利润',
     `oi` DOUBLE DEFAULT NULL COMMENT '营业收入',
     `coe` DOUBLE DEFAULT NULL COMMENT '营业成本',
@@ -111,5 +112,6 @@ CREATE TABLE `financial` (
     `immovables_turnover_ratio` DOUBLE DEFAULT NULL COMMENT '不动产及设备周转率（次）：营业收入 / (固定资产 + 在建工程)',
     `total_asset_turnover_ratio` DOUBLE DEFAULT NULL COMMENT '总资产周转率（次）：营业收入 / (流动资产总额 + 非流动资产总额)',
     `cash_flow_ratio` DOUBLE DEFAULT NULL COMMENT '现金流量比率：营业活动现金流量 / 流动负债总额',
+    `cash_reinvestment_ratio` DOUBLE DEFAULT NULL COMMENT '现金再投资比率：(经营活动产生的现金流量净额 - 筹资活动产生的现金流量净额) / (流动资产总额 + 非流动资产总额 - 流动负债总额)',
     PRIMARY KEY (`code`, `year`, `report_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='财务报表';

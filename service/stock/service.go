@@ -196,6 +196,7 @@ func processingCashFlowSheet(financials []*models.Financial, code string, queryD
 			financial.Ocf = cashFlowSheetData.Ocf
 			financial.Cfi = cashFlowSheetData.Cfi
 			financial.Cff = cashFlowSheetData.Cff
+			financial.AssignDividendPorfit = cashFlowSheetData.AssignDividendPorfit
 		}
 	}
 }
@@ -330,7 +331,8 @@ func calcFinancialRatio(code string) {
 		    average_sales_days = ROUND(360 / inventory_turnover_ratio, 2),
 		    immovables_turnover_ratio = ROUND(oi / (fixed_asset + cip), 2),
 		    total_asset_turnover_ratio = ROUND(oi / (ca_total + nca_total), 2),
-		    cash_flow_ratio = ROUND(ocf / cl_total * 100, 2)
+		    cash_flow_ratio = ROUND(ocf / cl_total * 100, 2),
+		    cash_reinvestment_ratio = ROUND((ocf - assign_dividend_porfit) / (ca_total + nca_total - cl_total) * 100, 2)
 		WHERE code = ?
 	`
 	args := []interface{}{code}

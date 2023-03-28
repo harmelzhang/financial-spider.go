@@ -15,9 +15,10 @@ type Financial struct {
 
 	Dividend interface{} // 年度分红金额
 
-	Ocf interface{} // 营业活动现金流量
-	Cfi interface{} // 投资活动现金流量
-	Cff interface{} // 筹资活动现金流量
+	Ocf                  interface{} // 营业活动现金流量
+	Cfi                  interface{} // 投资活动现金流量
+	Cff                  interface{} // 筹资活动现金流量
+	AssignDividendPorfit interface{} // 分配股利、利润或偿付利息支付的现金
 
 	Np       interface{} // 净利润
 	Oi       interface{} // 营业收入

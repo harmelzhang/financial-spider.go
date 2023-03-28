@@ -3,9 +3,10 @@ package vo
 type FinancialData struct {
 	ReportDate string `json:"REPORT_DATE"` // 报告期：yyyy-MM-dd HH:mm:ss
 
-	Ocf interface{} `json:"NETCASH_OPERATE"` // 经营活动产生的现金流量净额
-	Cfi interface{} `json:"NETCASH_INVEST"`  // 投资活动产生的现金流量净额
-	Cff interface{} `json:"NETCASH_FINANCE"` // 筹资活动产生的现金流量净额
+	Ocf                  interface{} `json:"NETCASH_OPERATE"`        // 经营活动产生的现金流量净额
+	Cfi                  interface{} `json:"NETCASH_INVEST"`         // 投资活动产生的现金流量净额
+	Cff                  interface{} `json:"NETCASH_FINANCE"`        // 筹资活动产生的现金流量净额
+	AssignDividendPorfit interface{} `json:"ASSIGN_DIVIDEND_PORFIT"` // 分配股利、利润或偿付利息支付的现金
 
 	Np       interface{} `json:"NETPROFIT"`            // 净利润
 	Oi       interface{} `json:"TOTAL_OPERATE_INCOME"` // 营业收入
