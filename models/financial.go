@@ -30,6 +30,9 @@ type Financial struct {
 	TradeFinasset         interface{} // 交易性金融资产（历史遗留）
 	DeriveFinasset        interface{} // 衍生金融资产
 
+	FixedAsset interface{} // 固定资产
+	Cip        interface{} // 在建工程
+
 	CaTotal         interface{} // 流动资产总额
 	NcaTotal        interface{} // 非流动资产总额
 	ClTotal         interface{} // 流动负债总额

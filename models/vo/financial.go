@@ -18,6 +18,9 @@ type FinancialData struct {
 	TradeFinasset         interface{} `json:"TRADE_FINASSET"`          // 交易性金融资产（历史遗留）
 	DeriveFinasset        interface{} `json:"DERIVE_FINASSET"`         // 衍生金融资产
 
+	FixedAsset interface{} `json:"FIXED_ASSET"` // 固定资产
+	Cip        interface{} `json:"CIP"`         // 在建工程
+
 	CaTotal         interface{} `json:"TOTAL_CURRENT_ASSETS"`    // 流动资产总额
 	NcaTotal        interface{} `json:"TOTAL_NONCURRENT_ASSETS"` // 非流动资产总额
 	ClTotal         interface{} `json:"TOTAL_CURRENT_LIAB"`      // 流动负债总额

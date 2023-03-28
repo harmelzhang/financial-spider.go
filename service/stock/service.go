@@ -253,6 +253,10 @@ func processingBalanceSheet(financials []*models.Financial, code string, queryDa
 			financial.TradeFinassetNotfvtpl = balanceSheetData.TradeFinassetNotfvtpl
 			financial.TradeFinasset = balanceSheetData.TradeFinasset
 			financial.DeriveFinasset = balanceSheetData.DeriveFinasset
+
+			financial.FixedAsset = balanceSheetData.FixedAsset
+			financial.Cip = balanceSheetData.Cip
+
 			financial.CaTotal = balanceSheetData.CaTotal
 			financial.NcaTotal = balanceSheetData.NcaTotal
 			financial.ClTotal = balanceSheetData.ClTotal
@@ -311,6 +315,7 @@ func calcFinancialRatio(code string) {
 		    cl_ratio = ROUND(cl_total / (ca_total + nca_total) * 100, 2),
 		    ncl_ratio = ROUND(ncl_total / (ca_total + nca_total) * 100, 2),
 		    debt_ratio = ROUND((cl_total + ncl_total) / (ca_total + nca_total) * 100, 2),
+		    long_term_funds_ratio = ROUND((ncl_total + (ca_total + nca_total - cl_total - ncl_total)) / (fixed_asset + cip) * 100, 2),
 		    equity_ratio = ROUND(100 - debt_ratio, 2),
 		    inventory_ratio = ROUND(inventory / (ca_total + nca_total) * 100, 2),
 		    accounts_rece_ratio = ROUND(accounts_rece / (ca_total + nca_total) * 100, 2),
