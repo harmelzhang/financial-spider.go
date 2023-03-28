@@ -108,6 +108,7 @@ CREATE TABLE `financial` (
     `average_cash_receipt_days` DOUBLE DEFAULT NULL COMMENT '平均收现天数：360 / 应收账款周转率',
     `inventory_turnover_ratio` DOUBLE DEFAULT NULL COMMENT '存货周转率（次）：营业成本 / 存货',
     `average_sales_days` DOUBLE DEFAULT NULL COMMENT '平均销货天数：360 / 存货周转率',
+    `immovables_turnover_ratio` DOUBLE DEFAULT NULL COMMENT '不动产及设备周转率（次）：营业收入 / (固定资产 + 在建工程)',
     `total_asset_turnover_ratio` DOUBLE DEFAULT NULL COMMENT '总资产周转率（次）：营业收入 / (流动资产总额 + 非流动资产总额)',
     `cash_flow_ratio` DOUBLE DEFAULT NULL COMMENT '现金流量比率：营业活动现金流量 / 流动负债总额',
     PRIMARY KEY (`code`, `year`, `report_date`)
