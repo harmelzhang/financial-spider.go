@@ -96,5 +96,7 @@ CREATE TABLE `financial` (
     `quick_ratio` DOUBLE DEFAULT NULL COMMENT '速动比率：(流动资产 - 存货) / 流动负债总额',
     `roe` DOUBLE DEFAULT NULL COMMENT '股东权益报酬率：净利润 / (流动资产总额 + 非流动资产总额 - 流动负债总额 - 非流动负债总额)',
     `roa` DOUBLE DEFAULT NULL COMMENT '总资产报酬率：净利润 / (流动资产总额 + 非流动资产总额)',
+    `accounts_rece_turnover_ratio` DOUBLE DEFAULT NULL COMMENT '应收账款周转率（次）：营业收入 / 应收账款',
+    `average_cash_receipt_days` DOUBLE DEFAULT NULL COMMENT '平均收现天数：360 / 应收账款周转率',
     PRIMARY KEY (`code`, `year`, `report_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='财务报表';
