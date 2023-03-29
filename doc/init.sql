@@ -84,6 +84,7 @@ CREATE TABLE `financial` (
     `cl_total` DOUBLE DEFAULT NULL COMMENT '流动负债总额',
     `ncl_total` DOUBLE DEFAULT NULL COMMENT '非流动负债总额',
     `inventory` DOUBLE DEFAULT NULL COMMENT '存货',
+    `inventory_liquidating` DOUBLE DEFAULT NULL COMMENT '存货减少额',
     `accounts_rece` DOUBLE DEFAULT NULL COMMENT '应收账款',
     `accounts_payable` DOUBLE DEFAULT NULL COMMENT '应付账款',
     `np_ratio` DOUBLE DEFAULT NULL COMMENT '净利率：净利润 / 营业收入',
@@ -112,6 +113,6 @@ CREATE TABLE `financial` (
     `immovables_turnover_ratio` DOUBLE DEFAULT NULL COMMENT '不动产及设备周转率（次）：营业收入 / (固定资产 + 在建工程)',
     `total_asset_turnover_ratio` DOUBLE DEFAULT NULL COMMENT '总资产周转率（次）：营业收入 / (流动资产总额 + 非流动资产总额)',
     `cash_flow_ratio` DOUBLE DEFAULT NULL COMMENT '现金流量比率：营业活动现金流量 / 流动负债总额',
-    `cash_reinvestment_ratio` DOUBLE DEFAULT NULL COMMENT '现金再投资比率：(经营活动产生的现金流量净额 - 筹资活动产生的现金流量净额) / (流动资产总额 + 非流动资产总额 - 流动负债总额)',
+    `cash_reinvestment_ratio` DOUBLE DEFAULT NULL COMMENT '现金再投资比率：(经营活动产生的现金流量净额 - 现金股利) / (流动资产总额 + 非流动资产总额 - 流动负债总额)',
     PRIMARY KEY (`code`, `year`, `report_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='财务报表';

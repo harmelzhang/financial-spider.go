@@ -197,6 +197,7 @@ func processingCashFlowSheet(financials []*models.Financial, code string, queryD
 			financial.Cfi = cashFlowSheetData.Cfi
 			financial.Cff = cashFlowSheetData.Cff
 			financial.AssignDividendPorfit = cashFlowSheetData.AssignDividendPorfit
+			financial.InventoryLiquidating = cashFlowSheetData.InventoryLiquidating
 		}
 	}
 }

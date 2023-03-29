@@ -7,6 +7,7 @@ type FinancialData struct {
 	Cfi                  interface{} `json:"NETCASH_INVEST"`         // 投资活动产生的现金流量净额
 	Cff                  interface{} `json:"NETCASH_FINANCE"`        // 筹资活动产生的现金流量净额
 	AssignDividendPorfit interface{} `json:"ASSIGN_DIVIDEND_PORFIT"` // 分配股利、利润或偿付利息支付的现金
+	InventoryLiquidating interface{} `json:"INVENTORY_REDUCE"`       // 存货减少额
 
 	Np       interface{} `json:"NETPROFIT"`            // 净利润
 	Oi       interface{} `json:"TOTAL_OPERATE_INCOME"` // 营业收入
