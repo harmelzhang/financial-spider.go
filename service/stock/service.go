@@ -12,6 +12,7 @@ import (
 	"financial-spider.go/utils/tools"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -100,7 +101,9 @@ func QueryStockFinancialData(code string) {
 
 	processingDividend(code)
 
+	// 处理财报比率
 	calcFinancialRatio(code)
+	calcCashFlowAdequacyRatio(financials)
 }
 
 // QueryStockMarketPlace 查询股票交易市场名称和简称（SH、SZ、BJ）
@@ -118,9 +121,9 @@ func QueryStockMarketPlace(code string) (string, string) {
 }
 
 // 根据股票代码和报告期查询财报
-func queryFinancialByCodeAndReportDate(financials []*models.Financial, code string, reportDate string) *models.Financial {
+func queryFinancialByCodeAndReportDate(financials []*models.Financial, reportDate string) *models.Financial {
 	for _, financial := range financials {
-		if financial.Code == code && financial.ReportDate == reportDate {
+		if financial.ReportDate == reportDate {
 			return financial
 		}
 	}
@@ -192,11 +195,12 @@ func processingCashFlowSheet(financials []*models.Financial, code string, queryD
 		for _, cashFlowSheetData := range cashFlowSheetResult.Data {
 			reportDate := strings.Split(cashFlowSheetData.ReportDate, " ")[0]
 
-			financial := queryFinancialByCodeAndReportDate(financials, code, reportDate)
+			financial := queryFinancialByCodeAndReportDate(financials, reportDate)
 			financial.Ocf = cashFlowSheetData.Ocf
 			financial.Cfi = cashFlowSheetData.Cfi
 			financial.Cff = cashFlowSheetData.Cff
 			financial.AssignDividendPorfit = cashFlowSheetData.AssignDividendPorfit
+			financial.AcquisitionAssets = cashFlowSheetData.AcquisitionAssets
 			financial.InventoryLiquidating = cashFlowSheetData.InventoryLiquidating
 		}
 	}
@@ -250,7 +254,7 @@ func processingBalanceSheet(financials []*models.Financial, code string, queryDa
 		for _, balanceSheetData := range balanceSheet.Data {
 			reportDate := strings.Split(balanceSheetData.ReportDate, " ")[0]
 
-			financial := queryFinancialByCodeAndReportDate(financials, code, reportDate)
+			financial := queryFinancialByCodeAndReportDate(financials, reportDate)
 			financial.MonetaryFund = balanceSheetData.MonetaryFund
 			financial.TradeFinassetNotfvtpl = balanceSheetData.TradeFinassetNotfvtpl
 			financial.TradeFinasset = balanceSheetData.TradeFinasset
@@ -291,7 +295,7 @@ func processingIncomeSheet(financials []*models.Financial, code string, queryDat
 		for _, incomeSheetData := range incomeSheet.Data {
 			reportDate := strings.Split(incomeSheetData.ReportDate, " ")[0]
 
-			financial := queryFinancialByCodeAndReportDate(financials, code, reportDate)
+			financial := queryFinancialByCodeAndReportDate(financials, reportDate)
 			financial.Np = incomeSheetData.Np
 			financial.Oi = incomeSheetData.Oi
 			financial.Coe = incomeSheetData.Coe
@@ -338,4 +342,57 @@ func calcFinancialRatio(code string) {
 	`
 	args := []interface{}{code}
 	db.ExecSQL(sql, args...)
+}
+
+// 计算现金流量允当比率
+func calcCashFlowAdequacyRatio(financials []*models.Financial) {
+	if len(financials) < 5 {
+		return
+	}
+	for _, financial := range financials {
+		reportDate := strings.Split(financial.ReportDate, "-")
+		year, monthDay := reportDate[0], fmt.Sprintf("%s-%s", reportDate[1], reportDate[2])
+		// 构建五年数据
+		reportDatas := make([]*models.Financial, 0)
+		iYear, _ := strconv.Atoi(year)
+		for i := iYear; i >= iYear-4; i-- {
+			ymd := fmt.Sprintf("%d-%s", i, monthDay)
+			reportDatas = append(reportDatas, queryFinancialByCodeAndReportDate(financials, ymd))
+		}
+
+		/**
+		现金流量允当比率 = 最近五年营业活动净现金流/最近五年(资本支出+现金股利+存货增加)
+		计算：营业活动现金流量 / (购建固定资产、无形资产和其他长期资产支付的现金 + 分配股利、利润或偿付利息支付的现金 - 存货减少额)
+		*/
+
+		var numerator, denominator float64
+		// 如果有一年没数据就跳过
+		hasNull := false
+		for _, data := range reportDatas {
+			if data == nil || data.Ocf == nil {
+				hasNull = true
+				break
+			}
+			numerator += data.Ocf.(float64)
+
+			if data.AcquisitionAssets != nil {
+				denominator += data.AcquisitionAssets.(float64)
+			}
+			if data.Cip != nil {
+				denominator += data.Cip.(float64)
+			}
+			if data.AssignDividendPorfit != nil {
+				denominator += data.AssignDividendPorfit.(float64)
+			}
+			if data.InventoryLiquidating != nil {
+				denominator -= data.InventoryLiquidating.(float64)
+			}
+		}
+
+		if !hasNull {
+			sql := "UPDATE financial SET cash_flow_adequacy_ratio = ? WHERE code = ? AND report_date = ?"
+			args := []interface{}{fmt.Sprintf("%.2f", numerator/denominator*10000/100), reportDatas[0].Code, reportDatas[0].ReportDate}
+			db.ExecSQL(sql, args...)
+		}
+	}
 }

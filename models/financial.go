@@ -19,6 +19,7 @@ type Financial struct {
 	Cfi                  interface{} // 投资活动现金流量
 	Cff                  interface{} // 筹资活动现金流量
 	AssignDividendPorfit interface{} // 分配股利、利润或偿付利息支付的现金
+	AcquisitionAssets    interface{} // 购建固定资产、无形资产和其他长期资产支付的现金
 	InventoryLiquidating interface{} // 存货减少额
 
 	Np       interface{} // 净利润
