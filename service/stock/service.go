@@ -337,7 +337,8 @@ func calcFinancialRatio(code string) {
 		    immovables_turnover_ratio = ROUND(oi / (fixed_asset + cip), 2),
 		    total_asset_turnover_ratio = ROUND(oi / (ca_total + nca_total), 2),
 		    cash_flow_ratio = ROUND(ocf / cl_total * 100, 2),
-		    cash_reinvestment_ratio = ROUND((ocf - assign_dividend_porfit) / (ca_total + nca_total - cl_total) * 100, 2)
+		    cash_reinvestment_ratio = ROUND((ocf - assign_dividend_porfit) / (ca_total + nca_total - cl_total) * 100, 2),
+		    profit_cash_ratio = ROUND(ocf / np * 100, 2)
 		WHERE code = ?
 	`
 	args := []interface{}{code}

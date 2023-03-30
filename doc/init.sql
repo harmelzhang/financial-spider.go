@@ -116,5 +116,6 @@ CREATE TABLE `financial` (
     `cash_flow_ratio` DOUBLE DEFAULT NULL COMMENT '现金流量比率：营业活动现金流量 / 流动负债总额',
     `cash_flow_adequacy_ratio` DOUBLE DEFAULT NULL COMMENT '现金流量允当比率：近五年营业活动现金流量 / 近五年(购建固定资产、无形资产和其他长期资产支付的现金 + 分配股利、利润或偿付利息支付的现金 - 存货减少额)',
     `cash_reinvestment_ratio` DOUBLE DEFAULT NULL COMMENT '现金再投资比率：(经营活动产生的现金流量净额 - 现金股利) / (流动资产总额 + 非流动资产总额 - 流动负债总额)',
+    `profit_cash_ratio` DOUBLE DEFAULT NULL COMMENT '盈利现金比率：营业活动现金流量 / 净利润',
     PRIMARY KEY (`code`, `year`, `report_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='财务报表';
