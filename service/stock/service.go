@@ -317,6 +317,7 @@ func calcFinancialRatio(code string) {
 		    operating_profit_ratio = ROUND((oi - coe_total) / oi * 100, 2),
 		    operating_safety_ratio = ROUND(operating_profit_ratio / oi_ratio * 100, 2),
 		    cash_equivalent_ratio = ROUND((monetary_fund + IFNULL(IFNULL(trade_finasset, trade_finasset_notfvtpl), 0) + IFNULL(derive_finasset, 0)) / (ca_total + nca_total) * 100, 2),
+		    cash_ratio = ROUND(monetary_fund / cl_total * 100, 2),
 		    ca_ratio = ROUND(ca_total / (ca_total + nca_total) * 100, 2),
 		    cl_ratio = ROUND(cl_total / (ca_total + nca_total) * 100, 2),
 		    ncl_ratio = ROUND(ncl_total / (ca_total + nca_total) * 100, 2),

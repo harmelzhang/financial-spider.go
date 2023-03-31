@@ -94,6 +94,7 @@ CREATE TABLE `financial` (
     `operating_profit_ratio` DOUBLE DEFAULT NULL COMMENT '营业利益率|营业利润率：(营业收入 - 营业成本 - 营业费用) / 营业收入',
     `operating_safety_ratio` DOUBLE DEFAULT NULL COMMENT '经营安全边际率：营业利益率 / 营业毛利率',
     `cash_equivalent_ratio` DOUBLE DEFAULT NULL COMMENT '现金与约当现金比率：(货币资金 + 交易性金融资产 + 衍生金融资产) / (流动资产总额 + 非流动资产总额)',
+    `cash_ratio` DOUBLE DEFAULT NULL COMMENT '现金比率：货币资金 / 流动负债总额',
     `ca_ratio` DOUBLE DEFAULT NULL COMMENT '流动资产比率：流动资产总额 / (流动资产总额 + 非流动资产总额)',
     `cl_ratio` DOUBLE DEFAULT NULL COMMENT '流动负债比率：流动负债总额 / (流动资产总额 + 非流动资产总额)',
     `ncl_ratio` DOUBLE DEFAULT NULL COMMENT '长期负债比率：非流动负债总额 / (流动资产总额 + 非流动资产总额)',
