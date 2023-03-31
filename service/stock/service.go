@@ -324,6 +324,8 @@ func calcFinancialRatio(code string) {
 		    debt_ratio = ROUND((cl_total + ncl_total) / (ca_total + nca_total) * 100, 2),
 		    long_term_funds_ratio = ROUND((ncl_total + (ca_total + nca_total - cl_total - ncl_total)) / (fixed_asset + cip) * 100, 2),
 		    equity_ratio = ROUND(100 - debt_ratio, 2),
+		    equity_multiplier = ROUND((ca_total + nca_total) / (ca_total + nca_total - cl_total - ncl_total), 2),
+		    capitalization_ratio = ROUND((cl_total + ncl_total) / (ca_total + nca_total - cl_total - ncl_total) * 100, 2),
 		    inventory_ratio = ROUND(inventory / (ca_total + nca_total) * 100, 2),
 		    accounts_rece_ratio = ROUND(accounts_rece / (ca_total + nca_total) * 100, 2),
 		    accounts_payable_ratio = ROUND(accounts_payable / (ca_total + nca_total) * 100, 2),

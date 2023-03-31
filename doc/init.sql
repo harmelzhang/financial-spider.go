@@ -101,6 +101,8 @@ CREATE TABLE `financial` (
     `debt_ratio` DOUBLE DEFAULT NULL COMMENT '负债比率：(流动负债总额 + 非流动负债总额) / (流动资产总额 + 非流动资产总额)',
     `long_term_funds_ratio` DOUBLE DEFAULT NULL COMMENT '长期资金占不动产及设备比率：(非流动负债总额 + 股东权益) / (固定资产 + 在建工程)',
     `equity_ratio` DOUBLE DEFAULT NULL COMMENT '股东权益比率：100 - 负债比率',
+    `equity_multiplier` DOUBLE DEFAULT NULL COMMENT '权益乘数：(流动资产总额 + 非流动资产总额) / 股东权益',
+    `capitalization_ratio` DOUBLE DEFAULT NULL COMMENT '负债权益比率|产权比率：(流动负债总额 + 非流动负债总额) / 股东权益',
     `inventory_ratio` DOUBLE DEFAULT NULL COMMENT '存货比率：存货 / (流动资产总额 + 非流动资产总额)',
     `accounts_rece_ratio` DOUBLE DEFAULT NULL COMMENT '应收账款比率：应收账款 / (流动资产总额 + 非流动资产总额)',
     `accounts_payable_ratio` DOUBLE DEFAULT NULL COMMENT '应付账款比率：应付账款 / (流动资产总额 + 非流动资产总额)',
