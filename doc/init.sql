@@ -4,7 +4,7 @@ USE `financial`;
 
 SET NAMES utf8mb4;
 
-DROP TABLE IF EXISTS `index`;
+DROP TABLE IF EXISTS `index_sample`;
 CREATE TABLE `index_sample` (
     `type_code` VARCHAR(20) NOT NULL COMMENT '类型代码（中证指数，www.csindex.com.cn）',
     `type_name` VARCHAR(20) NOT NULL COMMENT '类型名称（沪深300、中证500、上证50....）',
@@ -41,6 +41,8 @@ CREATE TABLE `stock` (
     `stock_name_pinyin` VARCHAR(16) DEFAULT NULL COMMENT '股票名称（拼音）',
     `stock_before_name` VARCHAR(100) DEFAULT NULL COMMENT '股票曾用名称',
     `company_name` VARCHAR(50) DEFAULT NULL COMMENT '公司名称',
+    `company_type` VARCHAR(10) DEFAULT NULL COMMENT '公司类型',
+    `company_type_code` CHAR(1) DEFAULT NULL COMMENT '公司类型代码',
     `company_profile` TEXT DEFAULT NULL COMMENT '公司简介',
     `region` VARCHAR(8) DEFAULT NULL COMMENT '地域（省份）',
     `address` TEXT DEFAULT NULL COMMENT '办公地址',
@@ -62,7 +64,7 @@ CREATE TABLE `financial` (
     `code` CHAR(6) NOT NULL COMMENT '股票代码',
     `year` CHAR(4) NOT NULL COMMENT '年份',
     `report_date` DATE NOT NULL COMMENT '财报季期',
-    `report_type` VARCHAR(2) NOT NULL COMMENT '季期类型（Q1~Q4，分别代表：一季报、半年报、三季报、年报；O，代表：其他）',
+    `report_type` VARCHAR(2) NOT NULL COMMENT '季期类型（Q1、H1、Q3、FY，分别代表：一季报、半年报、三季报、年报；O，代表：其他）',
     `dividend` DOUBLE DEFAULT NULL COMMENT '年度分红总金额',
     `ocf` DOUBLE DEFAULT NULL COMMENT '营业活动现金流量',
     `cfi` DOUBLE DEFAULT NULL COMMENT '投资活动现金流量',

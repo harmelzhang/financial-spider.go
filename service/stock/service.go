@@ -17,8 +17,10 @@ import (
 )
 
 // QueryStockBaseInfo 查询股票基本信息
-func QueryStockBaseInfo(code string) {
-	log.Println("查询股票基本信息")
+func QueryStockBaseInfo(code string) *models.Stock {
+	log.Println("查询股票对应公司基本信息")
+
+	companyType, companyTypeCode := queryCompanyType(code)
 
 	marketName, marketShortName := QueryStockMarketPlace(code)
 
@@ -39,6 +41,8 @@ func QueryStockBaseInfo(code string) {
 		StockNamePinyin:     tools.GetPinyinFirstWord(baseInfo.StockName.(string)),
 		StockBeforeName:     baseInfo.StockBeforeName,
 		CompanyName:         baseInfo.CompanyName,
+		CompanyType:         companyType,
+		CompanyTypeCode:     companyTypeCode,
 		CompanyProfile:      strings.Trim(baseInfo.CompanyProfile.(string), " "),
 		Region:              baseInfo.Region,
 		Address:             baseInfo.Address,
@@ -66,32 +70,38 @@ func QueryStockBaseInfo(code string) {
 
 	// 插入或修改数据
 	stock.ReplaceData()
+
+	return &stock
 }
 
 // QueryStockFinancialData 查询股票对应公司财报数据
-func QueryStockFinancialData(code string) {
-	allReportDates, _ := queryAllReportDate(code)
+func QueryStockFinancialData(stock *models.Stock, reportDates []string) {
+	code, companyTypeCode := stock.Code, stock.CompanyTypeCode
+
+	if len(reportDates) == 0 {
+		reportDates, _ = queryAllReportDate(code)
+	}
 
 	log.Println("查询股票对应公司财报数据")
 
 	// 初始化操作
 	financials := make([]*models.Financial, 0)
-	for _, reportDate := range allReportDates {
+	for _, reportDate := range reportDates {
 		financial := models.NewFinancial(code, reportDate)
 		financial.InitData()
 
 		financials = append(financials, financial)
 	}
 
-	reportDatePages, pageTotal := tools.ArraySlice(allReportDates, fConfig.QueryPageSize) // 分页查询，减少请求量
+	reportDatePages, pageTotal := tools.ArraySlice(reportDates, fConfig.QueryPageSize) // 分页查询，减少请求量
 	for i, reportDates := range reportDatePages {
 		log.Printf("处理报表进度 : %d / %d", i+1, pageTotal)
 
 		queryDates := strings.Join(reportDates, ",")
 
-		processingCashFlowSheet(financials, code, queryDates)
-		processingIncomeSheet(financials, code, queryDates)
-		processingBalanceSheet(financials, code, queryDates)
+		processingCashFlowSheet(financials, code, companyTypeCode, queryDates)
+		processingIncomeSheet(financials, code, companyTypeCode, queryDates)
+		processingBalanceSheet(financials, code, companyTypeCode, queryDates)
 	}
 
 	// 财报数据入库（也可以在每个处理函数中进行，但是会增加数据库的操作，好处是每次都能更新一部分数据）
@@ -99,7 +109,7 @@ func QueryStockFinancialData(code string) {
 		financial.UpdateData()
 	}
 
-	processingDividend(code)
+	processingDividend(code, reportDates)
 
 	// 处理财报比率
 	calcFinancialRatio(code)
@@ -130,6 +140,27 @@ func queryFinancialByCodeAndReportDate(financials []*models.Financial, reportDat
 	return nil
 }
 
+// 查询公司类型
+func queryCompanyType(code string) (string, string) {
+	log.Println("查询公司类型")
+	url := fmt.Sprintf(sConfig.QueryCompanyTypeUrl, code)
+	companyTypeResult := vo.CompanyTypeResult{}
+	err := json.Unmarshal(http.Get(url), &companyTypeResult)
+	if err != nil {
+		log.Println("查询公司类型出错，使用默认类型 : 4")
+	}
+	companyType, companyTypeCode := "普通", "4"
+
+	if companyTypeResult.Success && companyTypeResult.Code == 0 {
+		if companyTypeResult.Result.Count != 0 {
+			companyType = companyTypeResult.Result.Data[0].Type
+			companyTypeCode = companyTypeResult.Result.Data[0].TypeCode
+		}
+	}
+
+	return companyType, companyTypeCode
+}
+
 // 查询所有报告期
 func queryAllReportDate(code string) ([]string, int) {
 	result := make([]string, 0)
@@ -148,7 +179,7 @@ func queryAllReportDate(code string) ([]string, int) {
 	}
 
 	log.Println("查询资产负债表报告期")
-	url := fmt.Sprintf(sConfig.QueryBalanceSheetReportDateUrl, marketShortName, code)
+	url := fmt.Sprintf(fConfig.QueryBalanceSheetReportDateUrl, marketShortName, code)
 	err := json.Unmarshal(http.Get(url), &reportDateResult)
 	if err != nil {
 		log.Fatalf("解析JSON出错 : %s", err)
@@ -156,7 +187,7 @@ func queryAllReportDate(code string) ([]string, int) {
 	insertDate()
 
 	log.Println("查询利润表报告期")
-	url = fmt.Sprintf(sConfig.QueryIncomeSheetReportDateUrl, marketShortName, code)
+	url = fmt.Sprintf(fConfig.QueryIncomeSheetReportDateUrl, marketShortName, code)
 	err = json.Unmarshal(http.Get(url), &reportDateResult)
 	if err != nil {
 		log.Fatalf("解析JSON出错 : %s", err)
@@ -164,7 +195,7 @@ func queryAllReportDate(code string) ([]string, int) {
 	insertDate()
 
 	log.Println("查询现金流量表报告期")
-	url = fmt.Sprintf(sConfig.QueryCashFlowSheetReportDateUrl, marketShortName, code)
+	url = fmt.Sprintf(fConfig.QueryCashFlowSheetReportDateUrl, marketShortName, code)
 	err = json.Unmarshal(http.Get(url), &reportDateResult)
 	if err != nil {
 		log.Fatalf("解析JSON出错 : %s", err)
@@ -175,11 +206,11 @@ func queryAllReportDate(code string) ([]string, int) {
 }
 
 // 处理现金流量表
-func processingCashFlowSheet(financials []*models.Financial, code string, queryDates string) {
+func processingCashFlowSheet(financials []*models.Financial, code string, companyTypeCode string, queryDates string) {
 	_, marketShortName := QueryStockMarketPlace(code)
 
 	log.Println("查询现金流量表数据")
-	url := fmt.Sprintf(fConfig.QueryCashFlowSheetUrl, queryDates, marketShortName, code)
+	url := fmt.Sprintf(fConfig.QueryCashFlowSheetUrl, companyTypeCode, queryDates, marketShortName, code)
 	cashFlowSheetResult := vo.FinancialResult{}
 	err := json.Unmarshal(http.Get(url), &cashFlowSheetResult)
 	if err != nil {
@@ -207,7 +238,7 @@ func processingCashFlowSheet(financials []*models.Financial, code string, queryD
 }
 
 // 处理分红数据
-func processingDividend(code string) {
+func processingDividend(code string, reportDates []string) {
 	log.Println("查询分红数据")
 	url := fmt.Sprintf(fConfig.QueryDividendUrl, code)
 	dividendResult := vo.DividendResult{}
@@ -218,14 +249,15 @@ func processingDividend(code string) {
 
 	if dividendResult.Code == 0 && dividendResult.Success {
 		for _, dividend := range dividendResult.Result.Data {
-
 			reportDate := dividend.Year + "-12-31"
-			financial := models.NewFinancial(code, reportDate)
-			financial.InitData()
+			if tools.IndexOf(reportDates, reportDate) != -1 {
+				financial := models.NewFinancial(code, reportDate)
+				financial.InitData()
 
-			sql := "UPDATE financial SET dividend = ? WHERE code = ? AND report_date = ?"
-			args := []interface{}{dividend.Money, code, reportDate}
-			db.ExecSQL(sql, args...)
+				sql := "UPDATE financial SET dividend = ? WHERE code = ? AND report_date = ?"
+				args := []interface{}{dividend.Money, code, reportDate}
+				db.ExecSQL(sql, args...)
+			}
 		}
 	} else {
 		log.Printf("获取分红数据失败，跳过查询 > Code:%d, Msg: %s", dividendResult.Code, dividendResult.Message)
@@ -234,11 +266,11 @@ func processingDividend(code string) {
 }
 
 // 处理资产负债表
-func processingBalanceSheet(financials []*models.Financial, code string, queryDates string) {
+func processingBalanceSheet(financials []*models.Financial, code string, companyTypeCode string, queryDates string) {
 	_, marketShortName := QueryStockMarketPlace(code)
 
 	log.Println("查询资产负债表数据")
-	url := fmt.Sprintf(fConfig.QueryBalanceSheetUrl, queryDates, marketShortName, code)
+	url := fmt.Sprintf(fConfig.QueryBalanceSheetUrl, companyTypeCode, queryDates, marketShortName, code)
 	balanceSheet := vo.FinancialResult{}
 	err := json.Unmarshal(http.Get(url), &balanceSheet)
 	if err != nil {
@@ -275,11 +307,11 @@ func processingBalanceSheet(financials []*models.Financial, code string, queryDa
 }
 
 // 处理利润表
-func processingIncomeSheet(financials []*models.Financial, code string, queryDates string) {
+func processingIncomeSheet(financials []*models.Financial, code string, companyTypeCode string, queryDates string) {
 	_, marketShortName := QueryStockMarketPlace(code)
 
 	log.Println("查询利润表数据")
-	url := fmt.Sprintf(fConfig.QueryIncomeSheetUrl, queryDates, marketShortName, code)
+	url := fmt.Sprintf(fConfig.QueryIncomeSheetUrl, companyTypeCode, queryDates, marketShortName, code)
 	incomeSheet := vo.FinancialResult{}
 	err := json.Unmarshal(http.Get(url), &incomeSheet)
 	if err != nil {
@@ -311,10 +343,10 @@ func calcFinancialRatio(code string) {
 	sql := `
 		UPDATE financial
 		SET
-		    np_ratio = ROUND(np / oi * 100, 2),
-		    dividend_ratio = ROUND(dividend / np * 100, 2),
-		    oi_ratio = ROUND((oi - coe) / oi * 100, 2),
-		    operating_profit_ratio = ROUND((oi - coe_total) / oi * 100, 2),
+		    np_ratio = ROUND(np / if(oi = 0, null, oi) * 100, 2),
+		    dividend_ratio = ROUND(dividend / if(np = 0, null, np) * 100, 2),
+		    oi_ratio = ROUND((oi - coe) / if(oi = 0, null, oi) * 100, 2),
+		    operating_profit_ratio = ROUND((oi - coe_total) / if(oi = 0, null, oi) * 100, 2),
 		    operating_safety_ratio = ROUND(operating_profit_ratio / oi_ratio * 100, 2),
 		    cash_equivalent_ratio = ROUND((monetary_fund + IFNULL(IFNULL(trade_finasset, trade_finasset_notfvtpl), 0) + IFNULL(derive_finasset, 0)) / (ca_total + nca_total) * 100, 2),
 		    cash_ratio = ROUND(monetary_fund / cl_total * 100, 2),
@@ -334,9 +366,9 @@ func calcFinancialRatio(code string) {
 		    roe = ROUND(np / (ca_total + nca_total - cl_total -ncl_total) * 100, 2),
 		    roa = ROUND(np / (ca_total + nca_total) * 100, 2),
 		    accounts_rece_turnover_ratio = ROUND(oi / accounts_rece, 2),
-		    average_cash_receipt_days = ROUND(360 / accounts_rece_turnover_ratio, 2),
+		    average_cash_receipt_days = ROUND(360 / if(accounts_rece_turnover_ratio = 0, null, accounts_rece_turnover_ratio), 2),
 		    inventory_turnover_ratio = ROUND(coe / inventory, 2),
-		    average_sales_days = ROUND(360 / inventory_turnover_ratio, 2),
+		    average_sales_days = ROUND(360 / if(inventory_turnover_ratio = 0, null, inventory_turnover_ratio), 2),
 		    immovables_turnover_ratio = ROUND(oi / (fixed_asset + cip), 2),
 		    total_asset_turnover_ratio = ROUND(oi / (ca_total + nca_total), 2),
 		    cash_flow_ratio = ROUND(ocf / cl_total * 100, 2),

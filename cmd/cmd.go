@@ -13,7 +13,7 @@ import (
 )
 
 // 处理函数
-type handler func()
+type handler func([]string)
 
 // 命令
 type command struct {
@@ -26,7 +26,7 @@ var (
 	fetch = command{
 		name:  "fetch",
 		usage: "抓取网络数据",
-		handler: func() {
+		handler: func(args []string) {
 			isService.QueryIndexSample()
 			cService.QueryCategory()
 
@@ -66,8 +66,8 @@ var (
 				}
 
 				// 查询数据
-				sService.QueryStockBaseInfo(code)
-				sService.QueryStockFinancialData(code)
+				stock := sService.QueryStockBaseInfo(code)
+				sService.QueryStockFinancialData(stock, args)
 
 				progress.Codes = append(progress.Codes, code)
 				progress.Time = time.Now().Unix()
@@ -85,7 +85,7 @@ var (
 	export = command{
 		name:  "export",
 		usage: "导出数据到本地",
-		handler: func() {
+		handler: func(args []string) {
 			// TODO 后续会增加导出数据的功能
 			fmt.Println(">>>> 导出数据")
 		},
@@ -108,9 +108,9 @@ func Run(args ...string) {
 
 	switch args[1] {
 	case fetch.name:
-		fetch.handler()
+		fetch.handler(args[2:])
 	case export.name:
-		export.handler()
+		export.handler(args[2:])
 	default:
 		fmt.Println("错误 : 不支持的参数")
 	}

@@ -53,11 +53,11 @@ func NewFinancial(code string, reportDate string) *Financial {
 	case "03":
 		financial.reportType = "Q1"
 	case "06":
-		financial.reportType = "Q2"
+		financial.reportType = "H1"
 	case "09":
 		financial.reportType = "Q3"
 	case "12":
-		financial.reportType = "Q4"
+		financial.reportType = "FY"
 	default:
 		financial.reportType = "O"
 	}

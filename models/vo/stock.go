@@ -58,3 +58,24 @@ type StockReportDateResult struct {
 	Pages int               `json:"pages"`
 	Data  []StockReportDate `json:"data"` // 只有一个
 }
+
+// -----
+
+type CompanyType struct {
+	Type     string `json:"ORG_TYPE"`
+	TypeCode string `json:"ORG_TYPE_CODE"`
+}
+
+type CompanyTypeData struct {
+	Count int           `json:"count"`
+	Pages int           `json:"pages"`
+	Data  []CompanyType `json:"data"` // 只有一个
+}
+
+// CompanyTypeResult 公司类型
+type CompanyTypeResult struct {
+	Code    int             `json:"code"`
+	Message string          `json:"message"`
+	Success bool            `json:"success"`
+	Result  CompanyTypeData `json:"result"`
+}
