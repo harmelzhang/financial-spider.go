@@ -343,36 +343,38 @@ func calcFinancialRatio(code string) {
 	sql := `
 		UPDATE financial
 		SET
-		    np_ratio = ROUND(np / if(oi = 0, null, oi) * 100, 2),
-		    dividend_ratio = ROUND(dividend / if(np = 0, null, np) * 100, 2),
-		    oi_ratio = ROUND((oi - coe) / if(oi = 0, null, oi) * 100, 2),
-		    operating_profit_ratio = ROUND((oi - coe_total) / if(oi = 0, null, oi) * 100, 2),
+		    asset_total = IF(ca_total IS NULL AND nca_total IS NULL, NULL, IFNULL(ca_total, 0) + IFNULL(nca_total, 0)),
+		    liability_total = IF(cl_total IS NULL AND ncl_total IS NULL, NULL, IFNULL(cl_total, 0) + IFNULL(ncl_total, 0)),
+		    np_ratio = ROUND(np / if(oi = 0, NULL, oi) * 100, 2),
+		    dividend_ratio = ROUND(dividend / if(np = 0, NULL, np) * 100, 2),
+		    oi_ratio = ROUND((oi - coe) / if(oi = 0, NULL, oi) * 100, 2),
+		    operating_profit_ratio = ROUND((oi - coe_total) / if(oi = 0, NULL, oi) * 100, 2),
 		    operating_safety_ratio = ROUND(operating_profit_ratio / oi_ratio * 100, 2),
-		    cash_equivalent_ratio = ROUND((monetary_fund + IFNULL(IFNULL(trade_finasset, trade_finasset_notfvtpl), 0) + IFNULL(derive_finasset, 0)) / (ca_total + nca_total) * 100, 2),
+		    cash_equivalent_ratio = ROUND((monetary_fund + IFNULL(IFNULL(trade_finasset, trade_finasset_notfvtpl), 0) + IFNULL(derive_finasset, 0)) / asset_total * 100, 2),
 		    cash_ratio = ROUND(monetary_fund / cl_total * 100, 2),
-		    ca_ratio = ROUND(ca_total / (ca_total + nca_total) * 100, 2),
-		    cl_ratio = ROUND(cl_total / (ca_total + nca_total) * 100, 2),
-		    ncl_ratio = ROUND(ncl_total / (ca_total + nca_total) * 100, 2),
-		    debt_ratio = ROUND((cl_total + ncl_total) / (ca_total + nca_total) * 100, 2),
-		    long_term_funds_ratio = ROUND((ncl_total + (ca_total + nca_total - cl_total - ncl_total)) / (fixed_asset + cip) * 100, 2),
+		    ca_ratio = ROUND(ca_total / asset_total * 100, 2),
+		    cl_ratio = ROUND(cl_total / asset_total * 100, 2),
+		    ncl_ratio = ROUND(ncl_total / asset_total * 100, 2),
+		    debt_ratio = ROUND((cl_total + ncl_total) / asset_total * 100, 2),
+		    long_term_funds_ratio = ROUND((ncl_total + (asset_total - liability_total)) / (fixed_asset + cip) * 100, 2),
 		    equity_ratio = ROUND(100 - debt_ratio, 2),
-		    equity_multiplier = ROUND((ca_total + nca_total) / (ca_total + nca_total - cl_total - ncl_total), 2),
-		    capitalization_ratio = ROUND((cl_total + ncl_total) / (ca_total + nca_total - cl_total - ncl_total) * 100, 2),
-		    inventory_ratio = ROUND(inventory / (ca_total + nca_total) * 100, 2),
-		    accounts_rece_ratio = ROUND(accounts_rece / (ca_total + nca_total) * 100, 2),
-		    accounts_payable_ratio = ROUND(accounts_payable / (ca_total + nca_total) * 100, 2),
+		    equity_multiplier = ROUND(asset_total / (asset_total - liability_total), 2),
+		    capitalization_ratio = ROUND((cl_total + ncl_total) / (asset_total - liability_total) * 100, 2),
+		    inventory_ratio = ROUND(inventory / asset_total * 100, 2),
+		    accounts_rece_ratio = ROUND(accounts_rece / asset_total * 100, 2),
+		    accounts_payable_ratio = ROUND(accounts_payable / asset_total * 100, 2),
 		    current_ratio = ROUND(ca_total / cl_total * 100, 2),
 		    quick_ratio = ROUND((ca_total - inventory) / cl_total * 100, 2),
-		    roe = ROUND(np / (ca_total + nca_total - cl_total -ncl_total) * 100, 2),
-		    roa = ROUND(np / (ca_total + nca_total) * 100, 2),
-		    accounts_rece_turnover_ratio = ROUND(oi / accounts_rece, 2),
-		    average_cash_receipt_days = ROUND(360 / if(accounts_rece_turnover_ratio = 0, null, accounts_rece_turnover_ratio), 2),
+		    roe = ROUND(np / (asset_total - cl_total -ncl_total) * 100, 2),
+		    roa = ROUND(np / asset_total * 100, 2),
+		    accounts_rece_turnover_ratio = ROUND(oi / if(accounts_rece = 0, NULL, accounts_rece), 2),
+		    average_cash_receipt_days = ROUND(360 / if(accounts_rece_turnover_ratio = 0, NULL, accounts_rece_turnover_ratio), 2),
 		    inventory_turnover_ratio = ROUND(coe / inventory, 2),
-		    average_sales_days = ROUND(360 / if(inventory_turnover_ratio = 0, null, inventory_turnover_ratio), 2),
+		    average_sales_days = ROUND(360 / if(inventory_turnover_ratio = 0, NULL, inventory_turnover_ratio), 2),
 		    immovables_turnover_ratio = ROUND(oi / (fixed_asset + cip), 2),
-		    total_asset_turnover_ratio = ROUND(oi / (ca_total + nca_total), 2),
+		    total_asset_turnover_ratio = ROUND(oi / asset_total, 2),
 		    cash_flow_ratio = ROUND(ocf / cl_total * 100, 2),
-		    cash_reinvestment_ratio = ROUND((ocf - assign_dividend_porfit) / (ca_total + nca_total - cl_total) * 100, 2),
+		    cash_reinvestment_ratio = ROUND((ocf - assign_dividend_porfit) / (asset_total - cl_total) * 100, 2),
 		    profit_cash_ratio = ROUND(ocf / np * 100, 2)
 		WHERE code = ?
 	`
@@ -414,15 +416,16 @@ func calcCashFlowAdequacyRatio(financials []*models.Financial) {
 			if data.AcquisitionAssets != nil {
 				denominator += data.AcquisitionAssets.(float64)
 			}
-			if data.Cip != nil {
-				denominator += data.Cip.(float64)
-			}
 			if data.AssignDividendPorfit != nil {
 				denominator += data.AssignDividendPorfit.(float64)
 			}
 			if data.InventoryLiquidating != nil {
 				denominator -= data.InventoryLiquidating.(float64)
 			}
+		}
+
+		if denominator == 0 {
+			continue
 		}
 
 		if !hasNull {
