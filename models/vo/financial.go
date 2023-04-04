@@ -10,11 +10,11 @@ type FinancialData struct {
 	AcquisitionAssets    interface{} `json:"CONSTRUCT_LONG_ASSET"`   // 购建固定资产、无形资产和其他长期资产支付的现金
 	InventoryLiquidating interface{} `json:"INVENTORY_REDUCE"`       // 存货减少额
 
-	Np       interface{} `json:"NETPROFIT"`            // 净利润
-	Oi       interface{} `json:"TOTAL_OPERATE_INCOME"` // 营业收入
-	Coe      interface{} `json:"OPERATE_COST"`         // 营业成本
-	CoeTotal interface{} `json:"TOTAL_OPERATE_COST"`   // 营业总成本（含各种费用，销售费用、管理费用等）
-	Eps      interface{} `json:"BASIC_EPS"`            // 每股盈余|基本每股收益
+	Np       interface{} `json:"NETPROFIT"`          // 净利润
+	Oi       interface{} `json:"OPERATE_INCOME"`     // 营业收入
+	Coe      interface{} `json:"OPERATE_COST"`       // 营业成本
+	CoeTotal interface{} `json:"TOTAL_OPERATE_COST"` // 营业总成本（含各种费用，销售费用、管理费用等）
+	Eps      interface{} `json:"BASIC_EPS"`          // 每股盈余|基本每股收益
 
 	MonetaryFund          interface{} `json:"MONETARYFUNDS"`           // 货币资金
 	TradeFinassetNotfvtpl interface{} `json:"TRADE_FINASSET_NOTFVTPL"` // 交易性金融资产

@@ -79,7 +79,7 @@ func QueryStockFinancialData(stock *models.Stock, reportDates []string) {
 	code, companyTypeCode := stock.Code, stock.CompanyTypeCode
 
 	if len(reportDates) == 0 {
-		reportDates, _ = queryAllReportDate(code)
+		reportDates, _ = queryAllReportDate(stock)
 	}
 
 	log.Println("查询股票对应公司财报数据")
@@ -162,10 +162,10 @@ func queryCompanyType(code string) (string, string) {
 }
 
 // 查询所有报告期
-func queryAllReportDate(code string) ([]string, int) {
+func queryAllReportDate(stock *models.Stock) ([]string, int) {
 	result := make([]string, 0)
 
-	_, marketShortName := QueryStockMarketPlace(code)
+	_, marketShortName := QueryStockMarketPlace(stock.Code)
 
 	reportDateResult := vo.StockReportDateResult{}
 
@@ -179,7 +179,7 @@ func queryAllReportDate(code string) ([]string, int) {
 	}
 
 	log.Println("查询资产负债表报告期")
-	url := fmt.Sprintf(fConfig.QueryBalanceSheetReportDateUrl, marketShortName, code)
+	url := fmt.Sprintf(fConfig.QueryBalanceSheetReportDateUrl, stock.CompanyTypeCode, marketShortName, stock.Code)
 	err := json.Unmarshal(http.Get(url), &reportDateResult)
 	if err != nil {
 		log.Fatalf("解析JSON出错 : %s", err)
@@ -187,7 +187,7 @@ func queryAllReportDate(code string) ([]string, int) {
 	insertDate()
 
 	log.Println("查询利润表报告期")
-	url = fmt.Sprintf(fConfig.QueryIncomeSheetReportDateUrl, marketShortName, code)
+	url = fmt.Sprintf(fConfig.QueryIncomeSheetReportDateUrl, stock.CompanyTypeCode, marketShortName, stock.Code)
 	err = json.Unmarshal(http.Get(url), &reportDateResult)
 	if err != nil {
 		log.Fatalf("解析JSON出错 : %s", err)
@@ -195,7 +195,7 @@ func queryAllReportDate(code string) ([]string, int) {
 	insertDate()
 
 	log.Println("查询现金流量表报告期")
-	url = fmt.Sprintf(fConfig.QueryCashFlowSheetReportDateUrl, marketShortName, code)
+	url = fmt.Sprintf(fConfig.QueryCashFlowSheetReportDateUrl, stock.CompanyTypeCode, marketShortName, stock.Code)
 	err = json.Unmarshal(http.Get(url), &reportDateResult)
 	if err != nil {
 		log.Fatalf("解析JSON出错 : %s", err)
@@ -340,15 +340,20 @@ func processingIncomeSheet(financials []*models.Financial, code string, companyT
 
 // 计算财务比率
 func calcFinancialRatio(code string) {
+	// 先进行数据校验，后计算比率
 	sql := `
 		UPDATE financial
 		SET
+		    oi = IF(oi = 0, NULL, oi),
+		    coe = IF(coe = 0, NULL, coe),
+		    np = IF(np = 0, NULL, np),
+
 		    asset_total = IF(ca_total IS NULL AND nca_total IS NULL, NULL, IFNULL(ca_total, 0) + IFNULL(nca_total, 0)),
 		    liability_total = IF(cl_total IS NULL AND ncl_total IS NULL, NULL, IFNULL(cl_total, 0) + IFNULL(ncl_total, 0)),
-		    np_ratio = ROUND(np / if(oi = 0, NULL, oi) * 100, 2),
-		    dividend_ratio = ROUND(dividend / if(np = 0, NULL, np) * 100, 2),
-		    oi_ratio = ROUND((oi - coe) / if(oi = 0, NULL, oi) * 100, 2),
-		    operating_profit_ratio = ROUND((oi - coe_total) / if(oi = 0, NULL, oi) * 100, 2),
+		    np_ratio = ROUND(np / oi * 100, 2),
+		    dividend_ratio = ROUND(dividend / np * 100, 2),
+		    oi_ratio = ROUND((oi - coe) / oi * 100, 2),
+		    operating_profit_ratio = ROUND((oi - coe_total) / oi * 100, 2),
 		    operating_safety_ratio = ROUND(operating_profit_ratio / oi_ratio * 100, 2),
 		    cash_equivalent_ratio = ROUND((monetary_fund + IFNULL(IFNULL(trade_finasset, trade_finasset_notfvtpl), 0) + IFNULL(derive_finasset, 0)) / asset_total * 100, 2),
 		    cash_ratio = ROUND(monetary_fund / cl_total * 100, 2),
@@ -365,12 +370,12 @@ func calcFinancialRatio(code string) {
 		    accounts_payable_ratio = ROUND(accounts_payable / asset_total * 100, 2),
 		    current_ratio = ROUND(ca_total / cl_total * 100, 2),
 		    quick_ratio = ROUND((ca_total - inventory) / cl_total * 100, 2),
-		    roe = ROUND(np / (asset_total - cl_total -ncl_total) * 100, 2),
+		    roe = ROUND(np / (asset_total - cl_total - ncl_total) * 100, 2),
 		    roa = ROUND(np / asset_total * 100, 2),
-		    accounts_rece_turnover_ratio = ROUND(oi / if(accounts_rece = 0, NULL, accounts_rece), 2),
-		    average_cash_receipt_days = ROUND(360 / if(accounts_rece_turnover_ratio = 0, NULL, accounts_rece_turnover_ratio), 2),
-		    inventory_turnover_ratio = ROUND(coe / inventory, 2),
-		    average_sales_days = ROUND(360 / if(inventory_turnover_ratio = 0, NULL, inventory_turnover_ratio), 2),
+		    accounts_rece_turnover_ratio = ROUND(oi / IF(accounts_rece = 0, NULL, accounts_rece), 2),
+		    average_cash_receipt_days = ROUND(360 / IF(accounts_rece_turnover_ratio = 0, NULL, accounts_rece_turnover_ratio), 2),
+		    inventory_turnover_ratio = ROUND(coe / IF(inventory = 0, NULL, inventory), 2),
+		    average_sales_days = ROUND(360 / IF(inventory_turnover_ratio = 0, NULL, inventory_turnover_ratio), 2),
 		    immovables_turnover_ratio = ROUND(oi / (fixed_asset + cip), 2),
 		    total_asset_turnover_ratio = ROUND(oi / asset_total, 2),
 		    cash_flow_ratio = ROUND(ocf / cl_total * 100, 2),

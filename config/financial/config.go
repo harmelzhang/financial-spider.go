@@ -3,13 +3,13 @@ package financial
 // ----- 三大报表报告期 -----
 
 // QueryBalanceSheetReportDateUrl 查询资产负债表报告期接口
-const QueryBalanceSheetReportDateUrl = "https://emweb.securities.eastmoney.com/NewFinanceAnalysis/zcfzbDateAjaxNew?companyType=4&reportDateType=0&code=%s%s"
+const QueryBalanceSheetReportDateUrl = "https://emweb.securities.eastmoney.com/NewFinanceAnalysis/zcfzbDateAjaxNew?companyType=%s&reportDateType=0&code=%s%s"
 
 // QueryIncomeSheetReportDateUrl 查询利润表报告期接口
-const QueryIncomeSheetReportDateUrl = "https://emweb.securities.eastmoney.com/NewFinanceAnalysis/lrbDateAjaxNew?companyType=4&reportDateType=0&code=%s%s"
+const QueryIncomeSheetReportDateUrl = "https://emweb.securities.eastmoney.com/NewFinanceAnalysis/lrbDateAjaxNew?companyType=%s&reportDateType=0&code=%s%s"
 
 // QueryCashFlowSheetReportDateUrl 查询现金流量表报告期接口
-const QueryCashFlowSheetReportDateUrl = "https://emweb.securities.eastmoney.com/NewFinanceAnalysis/xjllbDateAjaxNew?companyType=4&reportDateType=0&code=%s%s"
+const QueryCashFlowSheetReportDateUrl = "https://emweb.securities.eastmoney.com/NewFinanceAnalysis/xjllbDateAjaxNew?companyType=%s&reportDateType=0&code=%s%s"
 
 // QueryReportDateUrl 查询所有报告期（未使用）
 const QueryReportDateUrl = "https://datacenter.eastmoney.com/securities/api/data/get?type=RPT_F10_FINANCE_GINCOME&sty=REPORT_DATE&filter=(SECURITY_CODE=%s)"
