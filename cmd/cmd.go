@@ -1,14 +1,18 @@
 package cmd
 
 import (
+	"bufio"
+	"encoding/json"
 	"financial-spider.go/config"
 	"financial-spider.go/models"
 	cService "financial-spider.go/service/category"
 	isService "financial-spider.go/service/index_sample"
 	sService "financial-spider.go/service/stock"
+	"financial-spider.go/utils/db"
 	"financial-spider.go/utils/tools"
 	"fmt"
 	"log"
+	"os"
 	"time"
 )
 
@@ -86,8 +90,28 @@ var (
 		name:  "export",
 		usage: "导出数据到本地",
 		handler: func(args []string) {
-			// TODO 后续会增加导出数据的功能
-			fmt.Println(">>>> 导出数据")
+			for _, tableName := range config.ExportTableNames {
+				log.Printf("正在导出 %s", tableName)
+
+				file, err := os.Create(fmt.Sprintf("%s.json", tableName))
+				if err != nil {
+					log.Fatalf("导出出错 : %s", err)
+				}
+				writer := bufio.NewWriter(file)
+
+				for i, row := range db.ExecSQL(fmt.Sprintf("SELECT * FROM %s", tableName)) {
+					bytes, _ := json.Marshal(row)
+					_, err := writer.WriteString(fmt.Sprintf("%s\n", string(bytes)))
+					if err != nil {
+						log.Fatalf("写文件出错 : %s", err)
+					}
+					_ = writer.Flush()
+					log.Printf("正在写入 %s : %d", tableName, i+1)
+				}
+
+				_ = file.Close()
+			}
+			log.Println("导出完成！")
 		},
 	}
 )

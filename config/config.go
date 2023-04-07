@@ -20,6 +20,10 @@ const DbMaxLifeTime = 2    // 连接的最大存活时间（分钟）
 const ProgressFileName = "progress.json" // 配置文件路径
 const TaskIntervalDay = 7                // 任务周期天数
 
+// ----- 待导出的数据表名称 -----
+
+var ExportTableNames = []string{"index_sample", "category", "category_stock_code", "stock", "financial"}
+
 // ----- HTTP -----
 
 const HttpTimeout = 30 // 超时时长（秒）
