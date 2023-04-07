@@ -2,6 +2,7 @@ package tools
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/mozillazg/go-pinyin"
 	"golang.org/x/net/html"
 	"log"
@@ -180,4 +181,9 @@ func MakeUpdateSqlAndArgs(data interface{}) (string, []interface{}) {
 	args = append(args, whereArgs...)
 
 	return sql, args
+}
+
+// GenerateUUID 生成 UUID
+func GenerateUUID() string {
+	return strings.Join(strings.Split(uuid.New().String(), "-"), "")
 }
