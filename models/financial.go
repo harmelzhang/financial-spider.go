@@ -71,8 +71,8 @@ func (financial *Financial) InitData() {
 	result := db.ExecSQL(sql, args...)
 
 	if result[0]["cnt"].(int64) == 0 {
-		sql = "INSERT INTO financial(code, year, report_date, report_type) VALUES(?, ?, ?, ?)"
-		args = append(args, financial.reportType)
+		sql = "INSERT INTO financial(code, year, report_date, report_type, _id) VALUES(?, ?, ?, ?, ?)"
+		args = append(args, financial.reportType, tools.GenerateUUID())
 		db.ExecSQL(sql, args...)
 	}
 }

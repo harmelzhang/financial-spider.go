@@ -34,7 +34,8 @@ func (stock *Stock) InitData() {
 	result := db.ExecSQL(sql, args...)
 
 	if result[0]["cnt"].(int64) == 0 {
-		sql = "INSERT INTO stock(code) VALUES(?)"
+		sql = "INSERT INTO stock(code, _id) VALUES(?, ?)"
+		args = append(args, tools.GenerateUUID())
 		db.ExecSQL(sql, args...)
 	}
 }

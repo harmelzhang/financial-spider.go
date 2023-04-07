@@ -36,6 +36,7 @@ CREATE TABLE `category_stock_code` (
 
 DROP TABLE IF EXISTS `stock`;
 CREATE TABLE `stock` (
+    `_id` CHAR(32) NOT NULL COMMENT '兼容MongoDB',
     `code` CHAR(6) NOT NULL COMMENT '股票代码',
     `stock_name` VARCHAR(16) DEFAULT NULL COMMENT '股票名称',
     `stock_name_pinyin` VARCHAR(16) DEFAULT NULL COMMENT '股票名称（拼音）',
@@ -61,6 +62,7 @@ CREATE TABLE `stock` (
 
 DROP TABLE IF EXISTS `financial`;
 CREATE TABLE `financial` (
+    `_id` CHAR(32) NOT NULL COMMENT '兼容MongoDB',
     `code` CHAR(6) NOT NULL COMMENT '股票代码',
     `year` CHAR(4) NOT NULL COMMENT '年份',
     `report_date` DATE NOT NULL COMMENT '财报季期',
