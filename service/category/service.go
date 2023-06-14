@@ -108,7 +108,7 @@ func findStockCodesByCategoeyType(cType cConfig.Type) {
 				if stockCodeVO.CsrcLeve2Code == "" {
 					continue
 				}
-				csc.CategoryId = stockCodeVO.CsrcLeve2Code
+				csc.CategoryId = stockCodeVO.CsrcLeve1Code + stockCodeVO.CsrcLeve2Code
 			}
 			// 插入新数据
 			csc.IntoDb()
