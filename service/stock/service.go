@@ -75,11 +75,26 @@ func QueryStockBaseInfo(code string) *models.Stock {
 }
 
 // QueryStockFinancialData 查询股票对应公司财报数据
-func QueryStockFinancialData(stock *models.Stock, reportDates []string) {
+func QueryStockFinancialData(stock *models.Stock, fetchNew bool) {
 	code, companyTypeCode := stock.Code, stock.CompanyTypeCode
 
-	if len(reportDates) == 0 {
-		reportDates, _ = queryAllReportDate(stock)
+	allReportDates, _ := queryAllReportDate(stock)
+
+	reportDates := make([]string, 0) // 要爬取的
+	if fetchNew {
+		existReportDates := make([]string, 0) // 已存在的
+		args := []interface{}{stock.Code}
+		data := db.ExecSQL("SELECT report_date FROM financial WHERE code = ?", args...)
+		for _, item := range data {
+			existReportDates = append(existReportDates, item["report_date"].(string))
+		}
+		for _, reportDate := range allReportDates {
+			if tools.IndexOf(existReportDates, reportDate) == -1 {
+				reportDates = append(reportDates, reportDate)
+			}
+		}
+	} else {
+		reportDates = allReportDates
 	}
 
 	log.Println("查询股票对应公司财报数据")

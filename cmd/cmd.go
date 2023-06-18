@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -31,6 +32,16 @@ var (
 		name:  "fetch",
 		usage: "抓取网络数据",
 		handler: func(args []string) {
+			if len(args) >= 2 {
+				log.Fatalln("fetch 参数异常")
+			}
+			fetchNew := false
+			if len(args) == 1 {
+				if strings.ToLower(args[0]) == "new" {
+					fetchNew = true
+				}
+			}
+
 			isService.QueryIndexSample()
 			cService.QueryCategory()
 
@@ -71,7 +82,7 @@ var (
 
 				// 查询数据
 				stock := sService.QueryStockBaseInfo(code)
-				sService.QueryStockFinancialData(stock, args)
+				sService.QueryStockFinancialData(stock, fetchNew)
 
 				progress.Codes = append(progress.Codes, code)
 				progress.Time = time.Now().Unix()
