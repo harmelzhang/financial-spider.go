@@ -33,10 +33,16 @@ var (
 		usage: "抓取网络数据",
 		handler: func(args []string) {
 			if len(args) >= 2 {
-				log.Fatalln("fetch 参数异常")
+				log.Fatalln("fetch 参数异常: 参数值数量异常")
 			}
+
+			cmdArgs := []string{"new"}
+
 			fetchNew := false
 			if len(args) == 1 {
+				if tools.IndexOf(cmdArgs, args[0]) == -1 {
+					log.Fatalln("fetch 参数异常: 不支持的参数值")
+				}
 				if strings.ToLower(args[0]) == "new" {
 					fetchNew = true
 				}
