@@ -103,6 +103,9 @@ func findStockCodesByCategoeyType(cType cConfig.Type) {
 			}
 			if stockCodeVO.CicsLeve1Code != "" { // 中证（四级）
 				csc.CategoryId = stockCodeVO.CicsLeve4Code
+				if csc.CategoryId == "99999999" {
+					continue
+				}
 			} else { // 证券会（两级）
 				// TODO 证券会暂时没对新三板股票进行分类，后续待优化
 				if stockCodeVO.CsrcLeve2Code == "" {
