@@ -1,0 +1,40 @@
+package model
+
+type Message struct {
+	// 代码
+	Code string
+	// 名称
+	Name string
+	// 名称（拼音）
+	NamePinYin string
+	// 曾用名称
+	BeforeName string
+	// 公司名称
+	CompanyName string
+	// 公司类型
+	CompanyType string
+	// 公司类型代码
+	CompanyTypeCode string
+	// 公司简介
+	CompanyProfile string
+	// 地域（省份）
+	Region string
+	// 办公地址
+	Address string
+	// 公司网站
+	Website string
+	// 主营业务
+	MainBusiness string
+	// 经营范围
+	BusinessScope string
+	// 成立日期
+	CreateDate string
+	// 上市日期
+	ListingDate string
+	// 律师事务所
+	LawFirm string
+	// 会计师事务所
+	AccountingFirm string
+	// 交易市场（上海、深圳、北京）
+	MarketPlace string
+}

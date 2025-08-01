@@ -1,0 +1,24 @@
+spider:
+  taskIntervalDays: 7
+  executorPoolSize: 3
+
+server:
+  address: ":8001"
+
+database:
+  default:
+    type: "mysql"
+    host: "127.0.0.1"
+    port: 3306
+    user: "root"
+    pass: "123456"
+    name: "financial"
+
+logger:
+  spider:
+    level: all
+    stdout: true
+    timeFormat: "2006-01-02 15:04:05"
+  web:
+    level: all
+    stdout: true
