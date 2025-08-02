@@ -2,12 +2,16 @@ package spider
 
 import (
 	"context"
+	"fmt"
 	"sync/atomic"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/panjf2000/ants/v2"
+	"harmel.cn/financial/internal/model"
 	"harmel.cn/financial/internal/public"
+	"harmel.cn/financial/internal/spider/response"
+	"harmel.cn/financial/utils/http"
 )
 
 // 爬虫管理器
@@ -70,7 +74,7 @@ func (s *SpiderManager) Start(ctx context.Context) (err error) {
 		g.Log("spider").Errorf(ctx, "fetch index sample data failed, err is %v", err)
 		return
 	}
-	err = s.fetchCategory()
+	err = s.fetchCategory(ctx)
 	if err != nil {
 		g.Log("spider").Errorf(ctx, "fetch category data failed, err is %v", err)
 		return
@@ -87,7 +91,9 @@ OUT:
 			g.Log("spider").Debug(ctx, "all task execute finish")
 			break OUT
 		default:
-			if !s.hasTaskRunning.Load() {
+			time.Sleep(2 * time.Second)
+			// 如果没有正在执行的线程并且通道里面没有待执行的任务
+			if !s.hasTaskRunning.Load() && len(s.taskChan) == 0 {
 				tasks := s.progressManager.UnexecutedTasks()
 				if len(tasks) == 0 {
 					s.progressManager.SetDone()
@@ -120,12 +126,106 @@ func (s *SpiderManager) fetchIndexSample() error {
 }
 
 // 最新行业分类信息（含分类下的股票）
-func (s *SpiderManager) fetchCategory() error {
-	// TODO
-	task := PendingTask{Id: "xxx"}
-	s.progressManager.PutTask(task)
-	s.taskChan <- task
+func (s *SpiderManager) fetchCategory(ctx context.Context) error {
+	for typeName, typeValue := range public.CategoryType {
+		g.Log("spider").Debugf(ctx, "start fetch %s catagory data", typeName)
+
+		// 查询行业分类
+		url := fmt.Sprintf(public.UrlCategory, typeValue)
+		client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
+		body, _, err := client.Get(nil)
+		if err != nil {
+			g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+			return err
+		}
+
+		categoryRes, err := http.ParseResponse[response.CategoryResult](body)
+		if err != nil {
+			g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+			return err
+		}
+		if categoryRes.Code == "200" && categoryRes.Success {
+			// TODO 删除当前数据库中分类数据
+			// 递归插入新数据
+			s.recursionCategorys(typeName, categoryRes.Data.MapList["4"])
+		} else {
+			g.Log("spider").Errorf(ctx, "fetch %s category data response error, code is %s", typeName, categoryRes.Code)
+			continue
+		}
+
+		// 查询行业下的所有股票代码
+		url = fmt.Sprintf(public.UrlCategoryStock, typeValue)
+		client = http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
+		body, _, err = client.Get(nil)
+		if err != nil {
+			g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+			return err
+		}
+
+		stockCodeRes, err := http.ParseResponse[response.StockCodeResult](body)
+		if err != nil {
+			g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+			return err
+		}
+		if stockCodeRes.Code == "200" && stockCodeRes.Success {
+			// TODO 删除当前数据库中旧数据
+			// TODO 插入新数据
+			for _, stockCode := range stockCodeRes.Data.List {
+				var categoryId string
+				if stockCode.CicsLeve1Code != "" {
+					// 中证
+					if stockCode.CicsLeve4Code == "99999999" {
+						continue
+					}
+					categoryId = stockCode.CicsLeve4Code
+				} else {
+					// 证监会
+					if stockCode.CsrcLeve2Code == "" {
+						// FIX 证券会暂时没对新三板股票进行分类，后续待优化
+						continue
+					}
+					categoryId = stockCode.CsrcLeve1Code + stockCode.CsrcLeve2Code
+				}
+				fmt.Println(categoryId)
+				//  丢入任务列表
+				task := PendingTask{Id: stockCode.Code}
+				exist := s.progressManager.PutTask(task)
+				if !exist {
+					s.taskChan <- task
+				}
+			}
+		} else {
+			g.Log("spider").Errorf(ctx, "fetch %s category stock code data response error, code is %s", typeName, categoryRes.Code)
+			continue
+		}
+
+		g.Log("spider").Debugf(ctx, "fetch %s catagory data success", typeName)
+	}
+
 	return nil
+}
+
+// 递归查询分类
+func (s *SpiderManager) recursionCategorys(typeName string, categorys []response.Category) {
+	if len(categorys) == 0 {
+		return
+	}
+
+	for order, category := range categorys {
+		mCategory := model.Category{
+			Type:         typeName,
+			Code:         category.Id,
+			Name:         category.Name,
+			Level:        category.Level,
+			DisplayOrder: order + 1,
+			ParentCode:   category.ParentId,
+		}
+		// TODO 插入数据库
+		fmt.Println(mCategory)
+		if len(category.Children) != 0 {
+			s.recursionCategorys(typeName, category.Children)
+		}
+	}
 }
 
 // 计算财务比率
@@ -180,6 +280,8 @@ func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err 
 			g.Log("spider").Errorf(ctx, "save process failed, err is %v", err)
 			return
 		}
+
+		g.Log("spider").Debugf(ctx, "task %s execute success", task.Id)
 
 		// 通知完成
 		if s.progressManager.Done() {

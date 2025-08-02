@@ -47,7 +47,7 @@ func NewProgressManager(dir string) *ProgressManager {
 }
 
 // 添加任务
-func (pm *ProgressManager) PutTask(task PendingTask) {
+func (pm *ProgressManager) PutTask(task PendingTask) bool {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
 
@@ -62,6 +62,8 @@ func (pm *ProgressManager) PutTask(task PendingTask) {
 	if !exist {
 		pm.Tasks = append(pm.Tasks, task)
 	}
+
+	return exist
 }
 
 // 获取未执行的任务
@@ -176,8 +178,5 @@ func (pm *ProgressManager) Save(ctx context.Context) (err error) {
 		return
 	}
 	err = os.WriteFile(pm.filePath, byteValues, 0666)
-	if err == nil {
-		g.Log("spider").Debugf(ctx, "process info save to local file %s success", PROGRESS_FILE_NAME)
-	}
 	return
 }
