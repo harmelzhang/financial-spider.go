@@ -13,6 +13,7 @@ import (
 	"harmel.cn/financial/internal/service"
 	"harmel.cn/financial/internal/spider/response"
 	"harmel.cn/financial/utils/http"
+	"harmel.cn/financial/utils/xls"
 )
 
 // 爬虫管理器
@@ -70,7 +71,7 @@ func (s *SpiderManager) Start(ctx context.Context) (err error) {
 	}
 
 	// 基础数据
-	err = s.fetchIndexSample()
+	err = s.fetchIndexSample(ctx)
 	if err != nil {
 		g.Log("spider").Errorf(ctx, "fetch index sample data failed, err is %v", err)
 		return
@@ -121,8 +122,40 @@ OUT:
 }
 
 // 最新指数样本信息
-func (s *SpiderManager) fetchIndexSample() error {
-	// TODO
+func (s *SpiderManager) fetchIndexSample(ctx context.Context) error {
+	for typeCode, _ := range public.IndexSampleType {
+		g.Log("spider").Debugf(ctx, "start fetch %s index sample data", typeCode)
+
+		// 请求数据
+		url := fmt.Sprintf(public.UrlIndexSample, typeCode)
+		client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
+		body, _, err := client.Get(nil)
+		if err != nil {
+			g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+			continue
+		}
+
+		// 读取Excel
+		items, err := xls.ReadXls(body, 0, 1)
+		if err != nil {
+			g.Log("spider").Errorf(ctx, "read xls failed, err is %v", err)
+			continue
+		}
+
+		// 删除旧数据 & 插入新数据
+		service.IndexSampleService.DeleteByType(ctx, typeCode)
+		for _, item := range items {
+			stockCode := item[4]
+			indexSample := &model.IndexSample{
+				TypeCode:  typeCode,
+				StockCode: stockCode,
+			}
+			err = service.IndexSampleService.Insert(ctx, indexSample)
+			if err != nil {
+				g.Log("spider").Errorf(ctx, "insert index sample failed, TypeCode is %s StockCode is %s err is %v", typeCode, stockCode, err)
+			}
+		}
+	}
 	return nil
 }
 
@@ -137,13 +170,13 @@ func (s *SpiderManager) fetchCategory(ctx context.Context) error {
 		body, _, err := client.Get(nil)
 		if err != nil {
 			g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
-			return err
+			continue
 		}
 
 		categoryRes, err := http.ParseResponse[response.CategoryResult](body)
 		if err != nil {
 			g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
-			return err
+			continue
 		}
 		if categoryRes.Code == "200" && categoryRes.Success {
 			// 删除数据库中指定类型的分类数据
@@ -165,13 +198,13 @@ func (s *SpiderManager) fetchCategory(ctx context.Context) error {
 		body, _, err = client.Get(nil)
 		if err != nil {
 			g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
-			return err
+			continue
 		}
 
 		stockCodeRes, err := http.ParseResponse[response.StockCodeResult](body)
 		if err != nil {
 			g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
-			return err
+			continue
 		}
 		if stockCodeRes.Code == "200" && stockCodeRes.Success {
 			// 删除数据库中指定类型的分类关系数据
@@ -180,35 +213,35 @@ func (s *SpiderManager) fetchCategory(ctx context.Context) error {
 				g.Log("spider").Warningf(ctx, "delete all categroy stock code failed, err is %v", err)
 			}
 			// 插入新数据
-			for _, stockCode := range stockCodeRes.Data.List {
+			for _, stock := range stockCodeRes.Data.List {
 				var categoryType, categoryCode string
-				if stockCode.CicsLeve1Code != "" {
+				if stock.CicsLeve1Code != "" {
 					// 中证
 					categoryType = "CICS"
-					if stockCode.CicsLeve4Code == "99999999" {
+					if stock.CicsLeve4Code == "99999999" {
 						continue
 					}
-					categoryCode = stockCode.CicsLeve4Code
+					categoryCode = stock.CicsLeve4Code
 				} else {
 					// 证监会
 					categoryType = "CSRC"
-					if stockCode.CsrcLeve2Code == "" {
+					if stock.CsrcLeve2Code == "" {
 						// FIX 证券会暂时没对新三板股票进行分类，后续待优化
 						continue
 					}
-					categoryCode = stockCode.CsrcLeve1Code + stockCode.CsrcLeve2Code
+					categoryCode = stock.CsrcLeve1Code + stock.CsrcLeve2Code
 				}
-				csc := &model.CategoryStockCode{
+				categoryStockCode := &model.CategoryStockCode{
 					Type:         categoryType,
 					CategoryCode: categoryCode,
-					StockCode:    stockCode.Code,
+					StockCode:    stock.Code,
 				}
-				err := service.CategoryStockCodeService.Insert(ctx, csc)
+				err := service.CategoryStockCodeService.Insert(ctx, categoryStockCode)
 				if err != nil {
 					g.Log("spider").Warningf(ctx, "insert categroy stock code failed, err is %v", err)
 				}
 				//  丢入任务列表
-				task := PendingTask{Id: stockCode.Code}
+				task := PendingTask{Id: stock.Code}
 				exist := s.progressManager.PutTask(task)
 				if !exist {
 					s.taskChan <- task

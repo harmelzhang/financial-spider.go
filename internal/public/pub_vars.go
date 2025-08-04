@@ -7,6 +7,11 @@ var (
 	SpiderExecutorPoolSize = 3
 	// 请求超时时长（秒）
 	SpiderTimtout = 3
+)
+
+var (
+	// 指数样本类型
+	IndexSampleType = make(map[string]string)
 
 	// 上交所股票前缀
 	ShanghaiMarketPrefixs []string

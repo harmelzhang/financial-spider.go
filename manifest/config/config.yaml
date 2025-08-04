@@ -1,15 +1,26 @@
+# 公共配置
+indexSample:
+  "000300": "沪深300"
+  "000905": "中证500"
+  "000016": "上证50"
+  "000688": "科创50"
+  "000015": "红利指数"
+marketPrefix:
+  shanghai: ["60", "68"]
+  shenzhen: ["00", "30"]
+  beijing: ["82", "83", "87", "88", "43"]
+
+# 爬虫配置
 spider:
   taskIntervalDays: 7
   executorPoolSize: 3
   timeout: 5
-  marketPrefix:
-    shanghai: ["60", "68"]
-    shenzhen: ["00", "30"]
-    beijing: ["82", "83", "87", "88", "43"]
 
+# Web配置
 server:
   address: ":8001"
 
+# 数据库配置
 database:
   default:
     type: "mysql"
@@ -19,6 +30,7 @@ database:
     pass: "123456"
     name: "financial"
 
+# 日志配置
 logger:
   spider:
     level: all
@@ -27,3 +39,4 @@ logger:
   web:
     level: all
     stdout: true
+    timeFormat: "2006-01-02 15:04:05"
