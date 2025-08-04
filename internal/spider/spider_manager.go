@@ -10,6 +10,7 @@ import (
 	"github.com/panjf2000/ants/v2"
 	"harmel.cn/financial/internal/model"
 	"harmel.cn/financial/internal/public"
+	"harmel.cn/financial/internal/service"
 	"harmel.cn/financial/internal/spider/response"
 	"harmel.cn/financial/utils/http"
 )
@@ -145,9 +146,14 @@ func (s *SpiderManager) fetchCategory(ctx context.Context) error {
 			return err
 		}
 		if categoryRes.Code == "200" && categoryRes.Success {
-			// TODO 删除当前数据库中分类数据
+			// 删除数据库中指定类型的分类数据
+			err := service.CategoryService.DeleteByType(ctx, typeName)
+			if err != nil {
+				g.Log("spider").Warningf(ctx, "delete category type %s data failed, err is %v", typeName, err)
+				continue
+			}
 			// 递归插入新数据
-			s.recursionCategorys(typeName, categoryRes.Data.MapList["4"])
+			s.recursionCategorys(ctx, typeName, categoryRes.Data.MapList["4"])
 		} else {
 			g.Log("spider").Errorf(ctx, "fetch %s category data response error, code is %s", typeName, categoryRes.Code)
 			continue
@@ -168,25 +174,39 @@ func (s *SpiderManager) fetchCategory(ctx context.Context) error {
 			return err
 		}
 		if stockCodeRes.Code == "200" && stockCodeRes.Success {
-			// TODO 删除当前数据库中旧数据
-			// TODO 插入新数据
+			// 删除数据库中指定类型的分类关系数据
+			err := service.CategoryStockCodeService.DeleteByType(ctx, typeName)
+			if err != nil {
+				g.Log("spider").Warningf(ctx, "delete all categroy stock code failed, err is %v", err)
+			}
+			// 插入新数据
 			for _, stockCode := range stockCodeRes.Data.List {
-				var categoryId string
+				var categoryType, categoryCode string
 				if stockCode.CicsLeve1Code != "" {
 					// 中证
+					categoryType = "CICS"
 					if stockCode.CicsLeve4Code == "99999999" {
 						continue
 					}
-					categoryId = stockCode.CicsLeve4Code
+					categoryCode = stockCode.CicsLeve4Code
 				} else {
 					// 证监会
+					categoryType = "CSRC"
 					if stockCode.CsrcLeve2Code == "" {
 						// FIX 证券会暂时没对新三板股票进行分类，后续待优化
 						continue
 					}
-					categoryId = stockCode.CsrcLeve1Code + stockCode.CsrcLeve2Code
+					categoryCode = stockCode.CsrcLeve1Code + stockCode.CsrcLeve2Code
 				}
-				fmt.Println(categoryId)
+				csc := &model.CategoryStockCode{
+					Type:         categoryType,
+					CategoryCode: categoryCode,
+					StockCode:    stockCode.Code,
+				}
+				err := service.CategoryStockCodeService.Insert(ctx, csc)
+				if err != nil {
+					g.Log("spider").Warningf(ctx, "insert categroy stock code failed, err is %v", err)
+				}
 				//  丢入任务列表
 				task := PendingTask{Id: stockCode.Code}
 				exist := s.progressManager.PutTask(task)
@@ -206,13 +226,13 @@ func (s *SpiderManager) fetchCategory(ctx context.Context) error {
 }
 
 // 递归查询分类
-func (s *SpiderManager) recursionCategorys(typeName string, categorys []response.Category) {
+func (s *SpiderManager) recursionCategorys(ctx context.Context, typeName string, categorys []response.Category) {
 	if len(categorys) == 0 {
 		return
 	}
 
 	for order, category := range categorys {
-		mCategory := model.Category{
+		mCategory := &model.Category{
 			Type:         typeName,
 			Code:         category.Id,
 			Name:         category.Name,
@@ -220,10 +240,14 @@ func (s *SpiderManager) recursionCategorys(typeName string, categorys []response
 			DisplayOrder: order + 1,
 			ParentCode:   category.ParentId,
 		}
-		// TODO 插入数据库
-		fmt.Println(mCategory)
+		// 插入数据库
+		err := service.CategoryService.Insert(ctx, mCategory)
+		if err != nil {
+			g.Log("spider").Warningf(ctx, "insert category data failed, err is %v", err)
+			continue
+		}
 		if len(category.Children) != 0 {
-			s.recursionCategorys(typeName, category.Children)
+			s.recursionCategorys(ctx, typeName, category.Children)
 		}
 	}
 }

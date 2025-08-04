@@ -17,6 +17,6 @@ var (
 )
 
 var (
-	// 行业分类类型（csrc：证监会、cics：中证）
-	CategoryType = map[string]string{"csrc": "1", "cics": "2"}
+	// 行业分类类型（CSRC：证监会、CICS：中证）
+	CategoryType = map[string]string{"CSRC": "1", "CICS": "2"}
 )

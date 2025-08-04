@@ -32,7 +32,7 @@ func New(url string, timeout time.Duration) *HttpClient {
 	}
 }
 
-// 设置默认请求头
+// 设置请求头
 func (c *HttpClient) SetHeader(key, value string) {
 	c.headers[key] = value
 }
