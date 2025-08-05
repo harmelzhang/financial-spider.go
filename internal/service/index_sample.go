@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"harmel.cn/financial/internal/dao"
 	"harmel.cn/financial/internal/model"
 )
 
@@ -12,19 +13,19 @@ type indexSampleService struct{}
 var IndexSampleService = new(indexSampleService)
 
 // 插入记录
-func (isService *indexSampleService) Insert(ctx context.Context, entity *model.IndexSample) (err error) {
-	_, err = model.DB(ctx, model.IndexSampleTableInfo.Table()).Insert(entity)
+func (s *indexSampleService) Insert(ctx context.Context, entity *model.IndexSample) (err error) {
+	err = dao.IndexSampleDao.Insert(ctx, entity)
 	return
 }
 
 // 删除所有数据
-func (isService *indexSampleService) DeleteAll(ctx context.Context) (err error) {
-	_, err = model.DB(ctx, model.IndexSampleTableInfo.Table()).Delete()
+func (s *indexSampleService) DeleteAll(ctx context.Context) (err error) {
+	err = dao.IndexSampleDao.DeleteAll(ctx)
 	return
 }
 
 // 删除指定类型的数据
-func (isService *indexSampleService) DeleteByType(ctx context.Context, typeCode string) (err error) {
-	_, err = model.DB(ctx, model.IndexSampleTableInfo.Table()).Where(model.IndexSampleTableInfo.Columns().TypeCode, typeCode).Delete()
+func (s *indexSampleService) DeleteByType(ctx context.Context, typeCode string) (err error) {
+	err = dao.IndexSampleDao.DeleteByType(ctx, typeCode)
 	return
 }

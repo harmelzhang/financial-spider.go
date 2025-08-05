@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"harmel.cn/financial/internal/dao"
 	"harmel.cn/financial/internal/model"
 )
 
@@ -12,19 +13,19 @@ type categoryService struct{}
 var CategoryService = new(categoryService)
 
 // 插入记录
-func (cService *categoryService) Insert(ctx context.Context, entity *model.Category) (err error) {
-	_, err = model.DB(ctx, model.CategoryTableInfo.Table()).Insert(entity)
+func (s *categoryService) Insert(ctx context.Context, entity *model.Category) (err error) {
+	err = dao.CategoryDao.Insert(ctx, entity)
 	return
 }
 
 // 删除所有数据
-func (cService *categoryService) DeleteAll(ctx context.Context) (err error) {
-	_, err = model.DB(ctx, model.CategoryTableInfo.Table()).Delete()
+func (s *categoryService) DeleteAll(ctx context.Context) (err error) {
+	err = dao.CategoryDao.DeleteAll(ctx)
 	return
 }
 
 // 删除指定类型的数据
-func (cService *categoryService) DeleteByType(ctx context.Context, typeName string) (err error) {
-	_, err = model.DB(ctx, model.CategoryTableInfo.Table()).Where(model.CategoryTableInfo.Columns().Type, typeName).Delete()
+func (s *categoryService) DeleteByType(ctx context.Context, typeName string) (err error) {
+	err = dao.CategoryDao.DeleteByType(ctx, typeName)
 	return
 }

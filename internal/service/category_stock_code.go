@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"harmel.cn/financial/internal/dao"
 	"harmel.cn/financial/internal/model"
 )
 
@@ -13,18 +14,18 @@ var CategoryStockCodeService = new(categoryStockCodeService)
 
 // 插入记录
 func (cscService *categoryStockCodeService) Insert(ctx context.Context, entity *model.CategoryStockCode) (err error) {
-	_, err = model.DB(ctx, model.CategoryStockCodeTableInfo.Table()).Insert(entity)
+	err = dao.CategoryStockCodeDao.Insert(ctx, entity)
 	return
 }
 
 // 删除所有数据
 func (cscService *categoryStockCodeService) DeleteAll(ctx context.Context) (err error) {
-	_, err = model.DB(ctx, model.CategoryStockCodeTableInfo.Table()).Delete()
+	err = dao.CategoryDao.DeleteAll(ctx)
 	return
 }
 
 // 删除指定类型的数据
 func (cscService *categoryStockCodeService) DeleteByType(ctx context.Context, typeName string) (err error) {
-	_, err = model.DB(ctx, model.CategoryStockCodeTableInfo.Table()).Where(model.CategoryStockCodeTableInfo.Columns().Type, typeName).Delete()
+	err = dao.CategoryStockCodeDao.DeleteByType(ctx, typeName)
 	return
 }
