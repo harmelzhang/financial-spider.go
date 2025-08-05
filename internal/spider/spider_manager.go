@@ -13,6 +13,8 @@ import (
 	"harmel.cn/financial/internal/service"
 	"harmel.cn/financial/internal/spider/response"
 	"harmel.cn/financial/utils/http"
+	"harmel.cn/financial/utils/slice"
+	"harmel.cn/financial/utils/tools"
 	"harmel.cn/financial/utils/xls"
 )
 
@@ -328,7 +330,7 @@ func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err 
 		g.Log("spider").Debugf(ctx, "start execute task %s", task.Id)
 
 		// 基本信息
-		err = s.fetchStockBaseInfo(task.Id)
+		err = s.fetchStockBaseInfo(ctx, task.Id)
 		if err != nil {
 			g.Log("spider").Errorf(ctx, "fetch stock %s base info failed, err is %v", task.Id, err)
 			return
@@ -382,8 +384,109 @@ func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err 
 	return
 }
 
-// TODO 基本信息
-func (s *SpiderManager) fetchStockBaseInfo(stockCode string) (err error) {
+// 查询股票市场
+func (s *SpiderManager) queryStockMarketPlace(stockCode string) (string, string) {
+	name, shortName := "", ""
+	stockCodePrefix := stockCode[0:2]
+	if slice.IndexOf(public.ShanghaiMarketPrefixs, stockCodePrefix) != -1 {
+		name, shortName = "上海", "SH"
+	} else if slice.IndexOf(public.ShenzhenMarketPrefixs, stockCodePrefix) != -1 {
+		name, shortName = "深圳", "SZ"
+	} else if slice.IndexOf(public.BeijingMarketPrefixs, stockCodePrefix) != -1 {
+		name, shortName = "北京", "BJ"
+	}
+	return name, shortName
+}
+
+// 基本信息
+func (s *SpiderManager) fetchStockBaseInfo(ctx context.Context, stockCode string) (err error) {
+	marketName, marketShortName := s.queryStockMarketPlace(stockCode)
+
+	// 公司类型
+	url := fmt.Sprintf(public.UrlStockCompanyType, stockCode)
+	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
+	body, _, err := client.Get(nil)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		return
+	}
+
+	companyType, companyTypeCode := "普通", "4"
+	companyTypeRes, err := http.ParseResponse[response.CompanyTypeResult](body)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+	}
+	if companyTypeRes.Success && companyTypeRes.Code == 0 {
+		if companyTypeRes.Result.Count != 0 {
+			companyType = companyTypeRes.Result.Data[0].Type
+			companyTypeCode = companyTypeRes.Result.Data[0].TypeCode
+		}
+	}
+
+	// 主营业务
+	url = fmt.Sprintf(public.UrlStockMainBusiness, stockCode)
+	client = http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
+	body, _, err = client.Get(nil)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+	}
+
+	mainBusinessResult, err := http.ParseResponse[response.MainBusinessResult](body)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		return
+	}
+
+	mainBusiness := ""
+	if mainBusinessResult.Code == 0 && mainBusinessResult.Success {
+		mainBusiness = mainBusinessResult.Result.Data[0].Info
+	} else {
+		g.Log("spider").Errorf(ctx, "fetch %s main business data response error, code is %d", stockCode, mainBusinessResult.Code)
+	}
+
+	// 主要信息
+	url = fmt.Sprintf(public.UrlStockBaseInfo, marketShortName, stockCode)
+	client = http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
+	body, _, err = client.Get(nil)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		return
+	}
+
+	baseInfoRes, err := http.ParseResponse[response.StockBaseInfoResult](body)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		return
+	}
+	baseInfo := baseInfoRes.BaseInfo[0]
+	listingInfo := baseInfoRes.ListingInfo[0]
+
+	stock := &model.Stock{
+		Code:            stockCode,
+		Name:            baseInfo.Name,
+		NamePinYin:      tools.PinyinFirstWord(baseInfo.Name),
+		BeforeName:      baseInfo.BeforeName,
+		CompanyName:     baseInfo.CompanyName,
+		CompanyType:     companyType,
+		CompanyTypeCode: companyTypeCode,
+		CompanyProfile:  baseInfo.CompanyProfile,
+		Region:          baseInfo.Region,
+		Address:         baseInfo.Address,
+		Website:         baseInfo.Website,
+		MainBusiness:    mainBusiness,
+		BusinessScope:   baseInfo.BusinessScope,
+		CreateDate:      listingInfo.CreateDate,
+		ListingDate:     listingInfo.ListingDate,
+		LawFirm:         baseInfo.LawFirm,
+		AccountingFirm:  baseInfo.AccountingFirm,
+		MarketPlace:     marketName,
+	}
+	err = service.StockService.Replace(ctx, stock)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "replace db stock failed, err is %v", err)
+		return
+	}
+
 	return nil
 }
 
