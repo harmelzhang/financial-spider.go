@@ -4,6 +4,7 @@ go 1.22.10
 
 require (
 	github.com/gogf/gf/v2 v2.9.0
+	github.com/mozillazg/go-pinyin v0.21.0
 	github.com/panjf2000/ants/v2 v2.11.3
 	github.com/shakinm/xlsReader v0.9.12
 )
