@@ -285,9 +285,8 @@ func (s *SpiderManager) recursionCategorys(ctx context.Context, typeName string,
 	}
 }
 
-// 计算财务比率
+// TODO 计算财务比率
 func (s *SpiderManager) calcFinancialRatios() error {
-	// TODO
 	return nil
 }
 
@@ -328,6 +327,41 @@ func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err 
 
 		g.Log("spider").Debugf(ctx, "start execute task %s", task.Id)
 
+		// 基本信息
+		err = s.fetchStockBaseInfo(task.Id)
+		if err != nil {
+			g.Log("spider").Errorf(ctx, "fetch stock %s base info failed, err is %v", task.Id, err)
+			return
+		}
+
+		// 现金流量表
+		err = s.fetchCashFlowSheet(task.Id)
+		if err != nil {
+			g.Log("spider").Errorf(ctx, "fetch stock %s cash flow sheet failed, err is %v", task.Id, err)
+			return
+		}
+
+		// 资产负债表
+		err = s.fetchBalanceSheet(task.Id)
+		if err != nil {
+			g.Log("spider").Errorf(ctx, "fetch stock %s balance sheet failed, err is %v", task.Id, err)
+			return
+		}
+
+		// 利润表
+		err = s.fetchIncomeSheet(task.Id)
+		if err != nil {
+			g.Log("spider").Errorf(ctx, "fetch stock %s income sheet failed, err is %v", task.Id, err)
+			return
+		}
+
+		// 分红数据
+		err = s.fetchDividendData(task.Id)
+		if err != nil {
+			g.Log("spider").Errorf(ctx, "fetch stock %s dividend data failed, err is %v", task.Id, err)
+			return
+		}
+
 		// 标记完成
 		s.progressManager.MarkTask(ctx, task.Id, true)
 
@@ -346,4 +380,29 @@ func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err 
 		}
 	})
 	return
+}
+
+// TODO 基本信息
+func (s *SpiderManager) fetchStockBaseInfo(stockCode string) (err error) {
+	return nil
+}
+
+// TODO 现金流量表
+func (s *SpiderManager) fetchCashFlowSheet(stockCode string) (err error) {
+	return nil
+}
+
+// TODO 资产负债表
+func (s *SpiderManager) fetchBalanceSheet(stockCode string) (err error) {
+	return nil
+}
+
+// TODO 利润表
+func (s *SpiderManager) fetchIncomeSheet(stockCode string) (err error) {
+	return nil
+}
+
+// TODO 分红数据
+func (s *SpiderManager) fetchDividendData(stockCode string) (err error) {
+	return nil
 }

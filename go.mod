@@ -5,6 +5,7 @@ go 1.22.10
 require (
 	github.com/gogf/gf/v2 v2.9.0
 	github.com/panjf2000/ants/v2 v2.11.3
+	github.com/shakinm/xlsReader v0.9.12
 )
 
 require (
@@ -26,7 +27,6 @@ require (
 	github.com/metakeule/fmtdate v1.1.2 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/shakinm/xlsReader v0.9.12 // indirect
 	go.opentelemetry.io/otel v1.32.0 // indirect
 	go.opentelemetry.io/otel/metric v1.32.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.32.0 // indirect

@@ -23,6 +23,16 @@ CREATE TABLE `category` (
     CONSTRAINT `fk_parent_code` FOREIGN KEY (`parent_code`) REFERENCES `category` (`code`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='行业分类';
 
+DROP TABLE IF EXISTS `category_stock_code`;
+CREATE TABLE `category_stock_code` (
+    `type` VARCHAR(5) NOT NULL COMMENT '分类类型（CSRC：证监会、CICS：中证）',
+    `category_code` VARCHAR(10) NOT NULL COMMENT '行业代码',
+    `stock_code` CHAR(6) NOT NULL COMMENT '股票代码',
+    PRIMARY KEY (`category_code`, `stock_code`),
+    CONSTRAINT `fk_category_code` FOREIGN KEY (`category_code`) REFERENCES `category` (`code`) ON DELETE CASCADE,
+    KEY `i_stock_code` (`stock_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='股票行业分类';
+
 DROP TABLE IF EXISTS `stock`;
 CREATE TABLE `stock` (
     `code` CHAR(6) NOT NULL COMMENT '代码',
