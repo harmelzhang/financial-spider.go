@@ -8,7 +8,7 @@ type Stock struct {
 	// 名称（拼音）
 	NamePinYin string
 	// 曾用名称
-	BeforeName string
+	BeforeName any
 	// 公司名称
 	CompanyName string
 	// 公司类型
@@ -22,7 +22,7 @@ type Stock struct {
 	// 办公地址
 	Address string
 	// 公司网站
-	Website string
+	Website any
 	// 主营业务
 	MainBusiness string
 	// 经营范围

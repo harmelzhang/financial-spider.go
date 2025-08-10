@@ -1,7 +1,7 @@
 package public
 
 // 指数样本接口
-const UrlIndexSample = "https://csi-web-dev.oss-cn-shanghai-finance-1-pub.aliyuncs.com/static/html/csindex/public/uploads/file/autofile/cons/%scons.xls"
+const UrlIndexSample = "https://oss-ch.csindex.com.cn/static/html/csindex/public/uploads/file/autofile/cons/%scons.xls"
 
 // 行业分类接口（证券会：1、中证：2）
 const UrlCategory = "https://www.csindex.com.cn/csindex-home/dataServer/queryCsiPeIndustryBytradeDate?classType=%s"
@@ -19,6 +19,15 @@ const UrlStockMainBusiness = "https://datacenter.eastmoney.com/securities/api/da
 const UrlStockCompanyType = "https://datacenter.eastmoney.com/securities/api/data/v1/get?reportName=RPT_F10_ORG_BASICINFO&columns=ORG_TYPE,ORG_TYPE_CODE&filter=(SECURITY_CODE=%s)"
 
 // ----- 财务报表 -----
+
+// 资产负债表报告期接口
+const UrlBalanceSheetReport = "https://emweb.securities.eastmoney.com/NewFinanceAnalysis/zcfzbDateAjaxNew?companyType=%s&reportDateType=0&code=%s%s"
+
+// 利润表报告期接口
+const UrlIncomeSheetReport = "https://emweb.securities.eastmoney.com/NewFinanceAnalysis/lrbDateAjaxNew?companyType=%s&reportDateType=0&code=%s%s"
+
+// 现金流量表报告期接口
+const UrlCashFlowSheetReport = "https://emweb.securities.eastmoney.com/NewFinanceAnalysis/xjllbDateAjaxNew?companyType=%s&reportDateType=0&code=%s%s"
 
 // 现金流量表数据接口
 const UrlCashFlowSheet = "https://emweb.securities.eastmoney.com/NewFinanceAnalysis/xjllbAjaxNew?companyType=%s&reportDateType=0&reportType=1&dates=%s&code=%s%s"

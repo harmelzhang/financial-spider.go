@@ -3,6 +3,7 @@ package spider
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -157,6 +158,8 @@ func (s *SpiderManager) fetchIndexSample(ctx context.Context) error {
 				g.Log("spider").Errorf(ctx, "insert index sample failed, TypeCode is %s StockCode is %s err is %v", typeCode, stockCode, err)
 			}
 		}
+
+		g.Log("spider").Debugf(ctx, "fetch %s index sample data success", typeCode)
 	}
 	return nil
 }
@@ -181,8 +184,8 @@ func (s *SpiderManager) fetchCategory(ctx context.Context) error {
 			continue
 		}
 		if categoryRes.Code == "200" && categoryRes.Success {
-			// 删除数据库中指定类型的分类数据
-			err := service.CategoryService.DeleteByType(ctx, typeName)
+			// 删除数据库中指定类型的分类数据（同时会级联删除行业下股票信息）
+			err = service.CategoryService.DeleteByType(ctx, typeName)
 			if err != nil {
 				g.Log("spider").Warningf(ctx, "delete category type %s data failed, err is %v", typeName, err)
 				continue
@@ -209,24 +212,17 @@ func (s *SpiderManager) fetchCategory(ctx context.Context) error {
 			continue
 		}
 		if stockCodeRes.Code == "200" && stockCodeRes.Success {
-			// 删除数据库中指定类型的分类关系数据
-			err := service.CategoryStockCodeService.DeleteByType(ctx, typeName)
-			if err != nil {
-				g.Log("spider").Warningf(ctx, "delete all categroy stock code failed, err is %v", err)
-			}
 			// 插入新数据
 			for _, stock := range stockCodeRes.Data.List {
-				var categoryType, categoryCode string
+				var categoryCode string
 				if stock.CicsLeve1Code != "" {
 					// 中证
-					categoryType = "CICS"
 					if stock.CicsLeve4Code == "99999999" {
 						continue
 					}
 					categoryCode = stock.CicsLeve4Code
 				} else {
 					// 证监会
-					categoryType = "CSRC"
 					if stock.CsrcLeve2Code == "" {
 						// FIX 证券会暂时没对新三板股票进行分类，后续待优化
 						continue
@@ -234,7 +230,6 @@ func (s *SpiderManager) fetchCategory(ctx context.Context) error {
 					categoryCode = stock.CsrcLeve1Code + stock.CsrcLeve2Code
 				}
 				categoryStockCode := &model.CategoryStockCode{
-					Type:         categoryType,
 					CategoryCode: categoryCode,
 					StockCode:    stock.Code,
 				}
@@ -273,7 +268,9 @@ func (s *SpiderManager) recursionCategorys(ctx context.Context, typeName string,
 			Name:         category.Name,
 			Level:        category.Level,
 			DisplayOrder: order + 1,
-			ParentCode:   category.ParentId,
+		}
+		if category.ParentId != "" {
+			mCategory.ParentCode = category.ParentId
 		}
 		// 插入数据库
 		err := service.CategoryService.Insert(ctx, mCategory)
@@ -309,6 +306,16 @@ func (s *SpiderManager) doProcTaskWorker(ctx context.Context) {
 	}
 }
 
+// 根据股票代码和报告期查询索引位置
+func (s *SpiderManager) findFinancialIndex(stockCode, reportDate string, financials []*model.Financial) int {
+	for idx, financial := range financials {
+		if financial.StockCode == stockCode && financial.ReportDate == reportDate {
+			return idx
+		}
+	}
+	return -1
+}
+
 // 执行实际任务
 func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err error) {
 	err = s.pool.Submit(func() {
@@ -330,39 +337,44 @@ func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err 
 		g.Log("spider").Debugf(ctx, "start execute task %s", task.Id)
 
 		// 基本信息
-		err = s.fetchStockBaseInfo(ctx, task.Id)
+		stock, err := s.fetchStockBaseInfo(ctx, task.Id)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "fetch stock %s base info failed, err is %v", task.Id, err)
+			g.Log("spider").Errorf(ctx, "fetch stock %s base info failed, err is %v", stock.Code, err)
 			return
 		}
 
-		// 现金流量表
-		err = s.fetchCashFlowSheet(task.Id)
+		// 查询所有报告期
+		reportDates, err := s.queryAllReportData(ctx, stock)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "fetch stock %s cash flow sheet failed, err is %v", task.Id, err)
+			g.Log("spider").Errorf(ctx, "fetch stock %s report date info failed, err is %v", stock.Code, err)
 			return
 		}
 
-		// 资产负债表
-		err = s.fetchBalanceSheet(task.Id)
-		if err != nil {
-			g.Log("spider").Errorf(ctx, "fetch stock %s balance sheet failed, err is %v", task.Id, err)
-			return
+		// 初始化操作
+		financials := make([]*model.Financial, 0, len(reportDates))
+		for _, reportDate := range reportDates {
+			financial := &model.Financial{
+				StockCode:  stock.Code,
+				ReportDate: reportDate,
+			}
+			financials = append(financials, financial)
 		}
 
-		// 利润表
-		err = s.fetchIncomeSheet(task.Id)
-		if err != nil {
-			g.Log("spider").Errorf(ctx, "fetch stock %s income sheet failed, err is %v", task.Id, err)
-			return
+		// 分页查询财报
+		reportDatePages, totalPages := slice.ArraySlice(reportDates, public.QueryReportPageSize)
+		for i, reportDates := range reportDatePages {
+			g.Log("spider").Debugf(ctx, "fetch stock %s report info page %d/%d", stock.Code, i+1, totalPages)
+			queryDates := strings.Join(reportDates, ",")
+			// 现金流量表
+			s.fetchCashFlowSheet(ctx, stock, queryDates, financials)
+			// 资产负债表
+			s.fetchBalanceSheet(ctx, stock, queryDates, financials)
+			// 利润表
+			s.fetchIncomeSheet(ctx, stock, queryDates, financials)
 		}
-
 		// 分红数据
-		err = s.fetchDividendData(task.Id)
-		if err != nil {
-			g.Log("spider").Errorf(ctx, "fetch stock %s dividend data failed, err is %v", task.Id, err)
-			return
-		}
+		s.fetchDividendData(ctx, stock, financials)
+		// TODO 插入或更新数据库
 
 		// 标记完成
 		s.progressManager.MarkTask(ctx, task.Id, true)
@@ -399,7 +411,7 @@ func (s *SpiderManager) queryStockMarketPlace(stockCode string) (string, string)
 }
 
 // 基本信息
-func (s *SpiderManager) fetchStockBaseInfo(ctx context.Context, stockCode string) (err error) {
+func (s *SpiderManager) fetchStockBaseInfo(ctx context.Context, stockCode string) (stock *model.Stock, err error) {
 	marketName, marketShortName := s.queryStockMarketPlace(stockCode)
 
 	// 公司类型
@@ -461,7 +473,7 @@ func (s *SpiderManager) fetchStockBaseInfo(ctx context.Context, stockCode string
 	baseInfo := baseInfoRes.BaseInfo[0]
 	listingInfo := baseInfoRes.ListingInfo[0]
 
-	stock := &model.Stock{
+	stock = &model.Stock{
 		Code:            stockCode,
 		Name:            baseInfo.Name,
 		NamePinYin:      tools.PinyinFirstWord(baseInfo.Name),
@@ -469,7 +481,7 @@ func (s *SpiderManager) fetchStockBaseInfo(ctx context.Context, stockCode string
 		CompanyName:     baseInfo.CompanyName,
 		CompanyType:     companyType,
 		CompanyTypeCode: companyTypeCode,
-		CompanyProfile:  baseInfo.CompanyProfile,
+		CompanyProfile:  strings.TrimSpace(baseInfo.CompanyProfile),
 		Region:          baseInfo.Region,
 		Address:         baseInfo.Address,
 		Website:         baseInfo.Website,
@@ -481,31 +493,224 @@ func (s *SpiderManager) fetchStockBaseInfo(ctx context.Context, stockCode string
 		AccountingFirm:  baseInfo.AccountingFirm,
 		MarketPlace:     marketName,
 	}
+	if stock.BeforeName != nil {
+		stock.BeforeName = strings.ReplaceAll(fmt.Sprint(stock.BeforeName), "→", "、")
+	}
 	err = service.StockService.Replace(ctx, stock)
 	if err != nil {
 		g.Log("spider").Errorf(ctx, "replace db stock failed, err is %v", err)
 		return
 	}
 
-	return nil
+	return
 }
 
-// TODO 现金流量表
-func (s *SpiderManager) fetchCashFlowSheet(stockCode string) (err error) {
-	return nil
+// 查询所有报告期
+func (s *SpiderManager) queryAllReportData(ctx context.Context, stock *model.Stock) (reportDates []string, err error) {
+	_, shortMarketName := s.queryStockMarketPlace(stock.Code)
+
+	appendReportDate := func(reportDateRes *response.ReportDateResult) {
+		for _, item := range reportDateRes.Data {
+			date := strings.Split(item.Date, " ")[0]
+			if slice.IndexOf(reportDates, date) == -1 {
+				reportDates = append(reportDates, date)
+			}
+		}
+	}
+
+	// 资产负债表
+	url := fmt.Sprintf(public.UrlBalanceSheetReport, stock.CompanyType, shortMarketName, stock.Code)
+	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
+	body, _, err := client.Get(nil)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		return
+	}
+	reportDateRes, err := http.ParseResponse[response.ReportDateResult](body)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		return
+	}
+	appendReportDate(reportDateRes)
+
+	// 利润表
+	url = fmt.Sprintf(public.UrlIncomeSheetReport, stock.CompanyType, shortMarketName, stock.Code)
+	client = http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
+	body, _, err = client.Get(nil)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		return
+	}
+	reportDateRes, err = http.ParseResponse[response.ReportDateResult](body)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		return
+	}
+	appendReportDate(reportDateRes)
+
+	// 现金流量表
+	url = fmt.Sprintf(public.UrlCashFlowSheetReport, stock.CompanyType, shortMarketName, stock.Code)
+	client = http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
+	body, _, err = client.Get(nil)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		return
+	}
+	reportDateRes, err = http.ParseResponse[response.ReportDateResult](body)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		return
+	}
+	appendReportDate(reportDateRes)
+
+	return
 }
 
-// TODO 资产负债表
-func (s *SpiderManager) fetchBalanceSheet(stockCode string) (err error) {
-	return nil
+// 现金流量表
+func (s *SpiderManager) fetchCashFlowSheet(ctx context.Context, stock *model.Stock, queryDates string, financials []*model.Financial) {
+	_, marketShortName := s.queryStockMarketPlace(stock.Code)
+	url := fmt.Sprintf(public.UrlCashFlowSheet, stock.CompanyType, queryDates, marketShortName, stock.Code)
+	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
+	body, _, err := client.Get(nil)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		return
+	}
+	financialRes, err := http.ParseResponse[response.FinancialResult](body)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		return
+	}
+	if financialRes.Type == "1" || financialRes.Status == 1 {
+		g.Log("spider").Errorf(ctx, "fetch %s cash flow sheet data response error, type is %s status is %d", stock.Code, financialRes.Type, financialRes.Status)
+		return
+	}
+
+	for _, sheet := range financialRes.Data {
+		reportDate := strings.Split(sheet.ReportDate, " ")[0]
+		idx := s.findFinancialIndex(stock.Code, reportDate, financials)
+		if idx == -1 {
+			continue
+		}
+		financial := financials[idx]
+
+		financial.Ocf = sheet.Ocf
+		financial.Cfi = sheet.Cfi
+		financial.Cff = sheet.Cff
+		financial.AssignDividendPorfit = sheet.AssignDividendPorfit
+		financial.AcquisitionAssets = sheet.AcquisitionAssets
+		financial.InventoryLiquidating = sheet.InventoryLiquidating
+	}
 }
 
-// TODO 利润表
-func (s *SpiderManager) fetchIncomeSheet(stockCode string) (err error) {
-	return nil
+// 资产负债表
+func (s *SpiderManager) fetchBalanceSheet(ctx context.Context, stock *model.Stock, queryDates string, financials []*model.Financial) {
+	_, marketShortName := s.queryStockMarketPlace(stock.Code)
+	url := fmt.Sprintf(public.UrlBalanceSheet, stock.CompanyType, queryDates, marketShortName, stock.Code)
+	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
+	body, _, err := client.Get(nil)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		return
+	}
+	financialRes, err := http.ParseResponse[response.FinancialResult](body)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		return
+	}
+	if financialRes.Type == "1" || financialRes.Status == 1 {
+		g.Log("spider").Errorf(ctx, "fetch %s balance sheet data response error, type is %s status is %d", stock.Code, financialRes.Type, financialRes.Status)
+		return
+	}
+
+	for _, sheet := range financialRes.Data {
+		reportDate := strings.Split(sheet.ReportDate, " ")[0]
+		idx := s.findFinancialIndex(stock.Code, reportDate, financials)
+		if idx == -1 {
+			continue
+		}
+		financial := financials[idx]
+
+		financial.MonetaryFund = sheet.MonetaryFund
+		financial.TradeFinassetNotfvtpl = sheet.TradeFinassetNotfvtpl
+		financial.TradeFinasset = sheet.TradeFinasset
+		financial.DeriveFinasset = sheet.DeriveFinasset
+
+		financial.FixedAsset = sheet.FixedAsset
+		financial.Cip = sheet.Cip
+
+		financial.CaTotal = sheet.CaTotal
+		financial.NcaTotal = sheet.NcaTotal
+		financial.ClTotal = sheet.ClTotal
+		financial.NclTotal = sheet.NclTotal
+		financial.Inventory = sheet.Inventory
+		financial.AccountsRece = sheet.AccountsRece
+		financial.AccountsPayable = sheet.AccountsPayable
+	}
 }
 
-// TODO 分红数据
-func (s *SpiderManager) fetchDividendData(stockCode string) (err error) {
-	return nil
+// 利润表
+func (s *SpiderManager) fetchIncomeSheet(ctx context.Context, stock *model.Stock, queryDates string, financials []*model.Financial) {
+	_, marketShortName := s.queryStockMarketPlace(stock.Code)
+	url := fmt.Sprintf(public.UrlIncomeSheet, stock.CompanyType, queryDates, marketShortName, stock.Code)
+	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
+	body, _, err := client.Get(nil)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		return
+	}
+	financialRes, err := http.ParseResponse[response.FinancialResult](body)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		return
+	}
+	if financialRes.Type == "1" || financialRes.Status == 1 {
+		g.Log("spider").Errorf(ctx, "fetch %s balance sheet data response error, type is %s status is %d", stock.Code, financialRes.Type, financialRes.Status)
+		return
+	}
+
+	for _, sheet := range financialRes.Data {
+		reportDate := strings.Split(sheet.ReportDate, " ")[0]
+		idx := s.findFinancialIndex(stock.Code, reportDate, financials)
+		if idx == -1 {
+			continue
+		}
+		financial := financials[idx]
+
+		financial.Np = sheet.Np
+		financial.Oi = sheet.Oi
+		financial.Coe = sheet.Coe
+		financial.CoeTotal = sheet.CoeTotal
+		financial.Eps = sheet.Eps
+	}
+}
+
+// 分红数据
+func (s *SpiderManager) fetchDividendData(ctx context.Context, stock *model.Stock, financials []*model.Financial) {
+	url := fmt.Sprintf(public.UrlDividend, stock.Code)
+	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
+	body, _, err := client.Get(nil)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		return
+	}
+	dividendRes, err := http.ParseResponse[response.DividendResult](body)
+	if err != nil {
+		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		return
+	}
+	if dividendRes.Code == 0 && dividendRes.Success {
+		for _, dividend := range dividendRes.Result.Data {
+			reportDate := dividend.Year + "-12-31"
+			idx := s.findFinancialIndex(stock.Code, reportDate, financials)
+			if idx == -1 {
+				continue
+			}
+			financial := financials[idx]
+			financial.Dividend = dividend.Money
+		}
+	} else {
+		g.Log("spider").Errorf(ctx, "fetch %s dividend data response error, code is %s message is %s", stock.Code, dividendRes.Code, dividendRes.Message)
+		return
+	}
 }

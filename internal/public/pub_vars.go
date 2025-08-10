@@ -7,6 +7,8 @@ var (
 	SpiderExecutorPoolSize = 3
 	// 请求超时时长（秒）
 	SpiderTimtout = 3
+	// 一次查询报告的数量
+	QueryReportPageSize = 5
 )
 
 var (
